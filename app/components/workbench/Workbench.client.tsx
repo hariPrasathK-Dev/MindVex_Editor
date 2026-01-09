@@ -21,6 +21,10 @@ import { renderLogger } from '~/utils/logger';
 import { EditorPanel } from './EditorPanel';
 import { Preview } from './Preview';
 import { Dashboard } from '~/components/dashboard/Dashboard.client';
+import { QuickActions } from './QuickActions.client';
+import { ArchitectureGraph } from './ArchitectureGraph.client';
+import { ChangeImpactAnalysis } from './ChangeImpactAnalysis.client';
+import { CycleDetection } from './CycleDetection.client';
 import useViewport from '~/lib/hooks';
 
 import { usePreviewStore } from '~/lib/stores/previews';
@@ -104,6 +108,21 @@ const dashboardSliderOptions: SliderOptions<WorkbenchViewType> = {
   },
 };
 
+const quickActionsSliderOptions: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'quick-actions',
+    text: 'Quick Actions',
+  },
+};
+
 // Options to always show Code, Diff, and Dashboard tabs
   const fourTabSliderOptions: SliderOptions<WorkbenchViewType> = {
     left: {
@@ -136,6 +155,101 @@ const dashboardSliderOptions: SliderOptions<WorkbenchViewType> = {
     },
   },
 } satisfies Variants;
+
+// Options to always show Code, Diff, Dashboard, and Quick Actions tabs
+const fiveTabSliderOptions: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'quick-actions',
+    text: 'Quick Actions',
+  },
+};
+
+// Options to show Code, Diff, and Preview tabs
+const previewSlider: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'preview',
+    text: 'Preview',
+  },
+};
+
+// Options to show Code, Diff, and Quick Actions tabs
+const quickActionsDashboardSlider: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'quick-actions',
+    text: 'Quick Actions',
+  },
+};
+
+// Options to show Code, Diff, and Change Impact Analysis tabs
+const changeImpactSlider: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'change-impact',
+    text: 'Change Impact',
+  },
+};
+
+// Options to show Code, Diff, and Cycle Detection tabs
+const cycleDetectionSlider: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'cycle-detection',
+    text: 'Cycle Detection',
+  },
+};
+
+const architectureGraphSlider: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'arch-graph',
+    text: 'Architecture',
+  },
+};
 
 const FileModifiedDropdown = memo(
   ({
@@ -468,7 +582,7 @@ export const Workbench = memo(
                       }
                     }}
                   />
-                  <Slider selected={selectedView} options={selectedView === 'preview' ? previewSliderOptions : dashboardSliderOptions} setSelected={setSelectedView} />
+                  <Slider selected={selectedView} options={selectedView === 'preview' ? previewSlider : selectedView === 'quick-actions' ? quickActionsDashboardSlider : selectedView === 'arch-graph' ? architectureGraphSlider : selectedView === 'change-impact' ? changeImpactSlider : selectedView === 'cycle-detection' ? cycleDetectionSlider : selectedView === 'dashboard' ? dashboardSliderOptions : extendedSliderOptions} setSelected={setSelectedView} />
                   <div className="ml-auto" />
                   {selectedView === 'code' && (
                     <div className="flex overflow-y-auto">
@@ -583,6 +697,18 @@ export const Workbench = memo(
                   </View>
                   <View initial={{ x: selectedView === 'dashboard' ? '0%' : '100%' }} animate={{ x: selectedView === 'dashboard' ? '0%' : '100%' }}>
                     <Dashboard />
+                  </View>
+                  <View initial={{ x: selectedView === 'quick-actions' ? '0%' : '100%' }} animate={{ x: selectedView === 'quick-actions' ? '0%' : '100%' }}>
+                    <QuickActions />
+                  </View>
+                  <View initial={{ x: selectedView === 'arch-graph' ? '0%' : '100%' }} animate={{ x: selectedView === 'arch-graph' ? '0%' : '100%' }}>
+                    <ArchitectureGraph />
+                  </View>
+                  <View initial={{ x: selectedView === 'change-impact' ? '0%' : '100%' }} animate={{ x: selectedView === 'change-impact' ? '0%' : '100%' }}>
+                    <ChangeImpactAnalysis />
+                  </View>
+                  <View initial={{ x: selectedView === 'cycle-detection' ? '0%' : '100%' }} animate={{ x: selectedView === 'cycle-detection' ? '0%' : '100%' }}>
+                    <CycleDetection />
                   </View>
                 </div>
               </div>

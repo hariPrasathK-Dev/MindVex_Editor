@@ -85,6 +85,10 @@ interface BaseChatProps {
   onContextFilesSelected?: (files: Record<string, any>) => void;
   contextSelectionMode?: 'auto' | 'manual';
   setContextSelectionMode?: ((mode: 'auto' | 'manual') => void) | undefined;
+  chatContextMode?: 'active-file' | 'selected-files' | 'no-context';
+  setChatContextMode?: ((mode: 'active-file' | 'selected-files' | 'no-context') => void) | undefined;
+  selectedContextFiles?: string[];
+  setSelectedContextFiles?: ((files: string[]) => void) | undefined;
 }
 
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
@@ -151,6 +155,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const expoUrl = useStore(expoUrlAtom);
     const [qrModalOpen, setQrModalOpen] = useState(false);
     const [contextSelectionMode, setContextSelectionMode] = useState<'auto' | 'manual'>('auto'); // 'auto' for AI selection, 'manual' for user selection
+    const [chatContextMode, setChatContextMode] = useState<'active-file' | 'selected-files' | 'no-context'>('active-file');
+    const [selectedContextFiles, setSelectedContextFiles] = useState<string[]>([]);
 
     useEffect(() => {
       if (expoUrl) {
@@ -474,8 +480,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   selectedElement={selectedElement}
                   setSelectedElement={setSelectedElement}
                   onContextFilesSelected={onContextFilesSelected}
-                  contextSelectionMode={contextSelectionMode}
-                  setContextSelectionMode={setContextSelectionMode}
+                  chatContextMode={chatContextMode}
+                  setChatContextMode={setChatContextMode}
+                  selectedContextFiles={selectedContextFiles}
+                  setSelectedContextFiles={setSelectedContextFiles}
                 />
               </div>
             </StickToBottom>

@@ -34,7 +34,14 @@ export type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 type Artifacts = MapStore<Record<string, ArtifactState>>;
 
-export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
+export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard' | 'quick-actions' | 'arch-graph' | 'change-impact' | 'cycle-detection';
+
+// Additional state for Quick Actions sub-views
+export const quickActionsStore = {
+  showKnowledgeGraphView: atom<boolean>(false),
+};
+
+export type QuickActionsViewType = 'list' | 'knowledge-graph';
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
@@ -42,6 +49,7 @@ export class WorkbenchStore {
   #editorStore = new EditorStore(this.#filesStore);
   #terminalStore = new TerminalStore(webcontainer);
 
+  #workspaceLoaded = false;
   #reloadedMessages = new Set<string>();
 
   artifacts: Artifacts = import.meta.hot?.data.artifacts ?? map({});
@@ -851,6 +859,9 @@ export class WorkbenchStore {
       // Clear any unsaved files
       this.unsavedFiles.set(new Set<string>());
       
+      // Reset workspace loaded flag to allow reloading
+      this.#workspaceLoaded = false;
+      
       // Force a refresh of the file tree UI by updating the files store atom
       this.#filesStore.files.set({});
       
@@ -1160,16 +1171,51 @@ export class WorkbenchStore {
 
   async loadWorkspaceState() {
     try {
+      // Prevent duplicate loading of workspace state
+      if (this.#workspaceLoaded) {
+        console.log('Workspace state already loaded, skipping');
+        return;
+      }
+      
       const workspaceDataStr = localStorage.getItem('mindvex-workspace-state');
       if (!workspaceDataStr) {
         console.log('No saved workspace state found');
+        // Mark as loaded even if no state was found to prevent future attempts
+        this.#workspaceLoaded = true;
         return;
       }
       
       const workspaceData = JSON.parse(workspaceDataStr);
       
-      // Restore files to WebContainer
+      // First, populate the workbench store with existing WebContainer files to avoid duplicates
+      // Wait for the file system to be ready and populate the store
       const container = await webcontainer;
+      
+      // Get current files from the WebContainer filesystem directly
+      const webContainerFiles: Record<string, { content: string; isBinary?: boolean }> = {};
+      
+      // Helper function to recursively walk the file system
+      const walkDir = async (dirPath: string) => {
+        const dirContents = await container.fs.readdir(dirPath, { withFileTypes: true });
+        
+        for (const dirent of dirContents) {
+          const fullPath = path.join(dirPath, dirent.name);
+          
+          if (dirent.isDirectory()) {
+            await walkDir(fullPath);
+          } else if (dirent.isFile()) {
+            try {
+              const content = await container.fs.readFile(fullPath, 'utf8');
+              webContainerFiles[fullPath] = { content };
+            } catch (error) {
+              console.error(`Error reading file ${fullPath}:`, error);
+            }
+          }
+        }
+      };
+      
+      // Walk from the WORK_DIR to get all existing files
+      await walkDir(WORK_DIR);
       
       for (const [filePath, fileData] of Object.entries(workspaceData.files as Record<string, { content: string; isBinary?: boolean }>)) {
         try {
@@ -1184,6 +1230,12 @@ export class WorkbenchStore {
             // If the path doesn't start with WORK_DIR, it's likely a relative path
             // We need to construct the full path
             normalizedFilePath = path.join(WORK_DIR, filePath);
+          }
+          
+          // Check if file already exists in the WebContainer to avoid duplication
+          if (webContainerFiles[normalizedFilePath]) {
+            console.log(`File already exists in WebContainer, skipping: ${normalizedFilePath}`);
+            continue;
           }
           
           const dirPath = path.dirname(normalizedFilePath);
@@ -1210,9 +1262,14 @@ export class WorkbenchStore {
         this.unsavedFiles.set(new Set(workspaceData.unsavedFiles));
       }
       
+      // Mark workspace as loaded to prevent future attempts
+      this.#workspaceLoaded = true;
+      
       console.log('Workspace state restored from localStorage');
     } catch (error) {
       console.error('Error loading workspace state:', error);
+      // Still mark as loaded to prevent repeated failed attempts
+      this.#workspaceLoaded = true;
     }
   }
 }

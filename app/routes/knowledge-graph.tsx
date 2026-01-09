@@ -1,27 +1,24 @@
-import { json, type MetaFunction } from '@remix-run/cloudflare';
-import { ClientOnly } from 'remix-utils/client-only';
-import { Header } from '~/components/header/Header';
-import BackgroundRays from '~/components/ui/BackgroundRays';
-import { KnowledgeGraph } from '~/components/knowledge-graph/KnowledgeGraph.client';
-import { BaseKnowledgeGraph } from '~/components/knowledge-graph/BaseKnowledgeGraph';
-import { Menu } from '~/components/sidebar/Menu.client';
-import { Workbench } from '~/components/workbench/Workbench.client';
-
-export const meta: MetaFunction = () => {
-  return [{ title: 'MindVex - Knowledge Graph' }, { name: 'description', content: 'Visualize knowledge relationships' }];
-};
-
-export const loader = () => json({});
+import { useEffect } from 'react';
+import { useNavigate } from '@remix-run/react';
+import { workbenchStore } from '~/lib/stores/workbench';
 
 export default function KnowledgeGraphPage() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Redirect to the workbench with Quick Actions tab selected
+    workbenchStore.showWorkbench.set(true);
+    workbenchStore.currentView.set('quick-actions');
+    
+    // Navigate back to the root to close this page
+    navigate('/');
+  }, [navigate]);
+  
   return (
-    <div className="flex flex-col h-full w-full bg-mindvex-elements-background-depth-1">
-      <BackgroundRays />
-      <Header />
-      <div className="flex flex-col lg:flex-row h-full">
-        <ClientOnly>{() => <Menu />}</ClientOnly>
-        <ClientOnly fallback={<BaseKnowledgeGraph />}>{() => <KnowledgeGraph />}</ClientOnly>
-        <ClientOnly>{() => <Workbench chatStarted={true} isStreaming={false} />}</ClientOnly>
+    <div className="flex items-center justify-center h-full">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-600 dark:text-gray-300">Redirecting to Quick Actions...</p>
       </div>
     </div>
   );

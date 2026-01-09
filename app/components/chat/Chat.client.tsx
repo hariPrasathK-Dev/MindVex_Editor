@@ -101,6 +101,8 @@ export const ChatImpl = memo(
     const [contextFiles, setContextFiles] = useState<Record<string, any>>({});
     const [designScheme, setDesignScheme] = useState<DesignScheme>(defaultDesignScheme);
     const [contextSelectionMode, setContextSelectionMode] = useState<'auto' | 'manual'>('auto'); // 'auto' for AI selection, 'manual' for user selection
+    const [chatContextMode, setChatContextMode] = useState<'active-file' | 'selected-files' | 'no-context'>('active-file');
+    const [selectedContextFiles, setSelectedContextFiles] = useState<string[]>([]);
     const actionAlert = useStore(workbenchStore.alert);
     const deployAlert = useStore(workbenchStore.deployAlert);
     const supabaseConn = useStore(supabaseConnection);
@@ -123,6 +125,7 @@ export const ChatImpl = memo(
     const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
     const [chatMode, setChatMode] = useState<'discuss' | 'build'>('build');
     const [selectedElement, setSelectedElement] = useState<ElementInfo | null>(null);
+    const selectedFile = useStore(workbenchStore.selectedFile);
     const mcpSettings = useMCPStore((state) => state.settings);
 
     const {
@@ -143,7 +146,21 @@ export const ChatImpl = memo(
       api: '/api/chat',
       body: {
         apiKeys,
-        files: { ...files, ...contextFiles }, // Include both workspace files and context files
+        files: {
+          ...(chatContextMode === 'no-context' 
+              ? {} // No context mode - send no files
+              : chatContextMode === 'selected-files' && selectedContextFiles.length > 0
+                ? Object.fromEntries(
+                    selectedContextFiles
+                      .filter(filePath => files[filePath])
+                      .map(filePath => [filePath, files[filePath]])
+                  )
+                : chatContextMode === 'active-file' && selectedFile && files[selectedFile]
+                  ? { [selectedFile]: files[selectedFile] } // Active file mode - send only selected file
+                  : { ...files, ...contextFiles } // Default behavior - include all files
+          ),
+          ...contextFiles // Always include context files from AddContextButton
+        },
         promptId,
         contextOptimization: contextSelectionMode === 'auto' && contextOptimizationEnabled, // Only use context optimization if in auto mode
         chatMode,
@@ -157,6 +174,8 @@ export const ChatImpl = memo(
           },
         },
         maxLLMSteps: mcpSettings.maxLLMSteps,
+        chatContextMode,
+        selectedContextFiles,
       },
       sendExtraMessageFields: true,
       onError: (e) => {
@@ -454,36 +473,31 @@ ${prompt}`,
 
 ${finalMessageContent}`;
 
-              setMessages([
-                {
-                  id: `1-${new Date().getTime()}`,
-                  role: 'user',
-                  content: userMessageText,
-                  parts: createMessageParts(userMessageText, imageDataList),
-                },
-                {
-                  id: `2-${new Date().getTime()}`,
-                  role: 'assistant',
-                  content: assistantMessage,
-                },
-                {
-                  id: `3-${new Date().getTime()}`,
-                  role: 'user',
-                  content: `[Model: ${model}]
+              // Use append to add messages to the conversation instead of replacing them
+              await append({
+                id: `1-${new Date().getTime()}`,
+                role: 'user',
+                content: userMessageText,
+                parts: createMessageParts(userMessageText, imageDataList),
+              });
+              
+              await append({
+                id: `2-${new Date().getTime()}`,
+                role: 'assistant',
+                content: assistantMessage,
+              });
+              
+              await append({
+                id: `3-${new Date().getTime()}`,
+                role: 'user',
+                content: `[Model: ${model}]
 
 [Provider: ${provider.name}]
 
 ${userMessage}`,
-                  annotations: ['hidden'],
-                },
-              ]);
+                annotations: ['hidden'],
+              });
 
-              const reloadOptions =
-                uploadedFiles.length > 0
-                  ? { experimental_attachments: await filesToAttachments(uploadedFiles) }
-                  : undefined;
-
-              reload(reloadOptions);
               setInput('');
               Cookies.remove(PROMPT_COOKIE_KEY);
 
@@ -508,16 +522,13 @@ ${userMessage}`,
 ${finalMessageContent}`;
         const attachments = uploadedFiles.length > 0 ? await filesToAttachments(uploadedFiles) : undefined;
 
-        setMessages([
-          {
-            id: `${new Date().getTime()}`,
-            role: 'user',
-            content: userMessageText,
-            parts: createMessageParts(userMessageText, imageDataList),
-            experimental_attachments: attachments,
-          },
-        ]);
-        reload(attachments ? { experimental_attachments: attachments } : undefined);
+        // Use append to add the message to the conversation instead of replacing all messages
+        await append({
+          role: 'user',
+          content: userMessageText,
+          parts: createMessageParts(userMessageText, imageDataList),
+          experimental_attachments: attachments,
+        });
         setFakeLoading(false);
         setInput('');
         Cookies.remove(PROMPT_COOKIE_KEY);
@@ -705,8 +716,10 @@ ${finalMessageContent}`;
         addToolResult={addToolResult}
         inRightPanel={inRightPanel}
         onContextFilesSelected={setContextFiles}
-        contextSelectionMode={contextSelectionMode}
-        setContextSelectionMode={setContextSelectionMode}
+        chatContextMode={chatContextMode}
+        setChatContextMode={setChatContextMode}
+        selectedContextFiles={selectedContextFiles}
+        setSelectedContextFiles={setSelectedContextFiles}
       />
     );
   },

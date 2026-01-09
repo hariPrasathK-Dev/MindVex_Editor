@@ -48,8 +48,8 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
     },
   });
 
-  const { messages, files, promptId, contextOptimization, supabase, chatMode, designScheme, maxLLMSteps } =
-    await request.json<{
+  const { messages, files, promptId, contextOptimization, supabase, chatMode, designScheme, maxLLMSteps, chatContextMode, selectedContextFiles } =
+    await request.json<{ chatContextMode?: 'active-file' | 'selected-files' | 'no-context'; selectedContextFiles?: string[]; 
       messages: Messages;
       files: any;
       promptId?: string;
@@ -95,7 +95,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         streamRecovery.startMonitoring();
 
         const filePaths = getFilePaths(files || {});
-        let filteredFiles: FileMap | undefined = undefined;
+        let filteredFiles: FileMap = {};
         let summary: string | undefined = undefined;
         let messageSliceId = 0;
 
@@ -105,7 +105,63 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
           messageSliceId = processedMessages.length - 3;
         }
 
-        if (filePaths.length > 0 && contextOptimization) {
+        // Handle different context modes
+        if (chatContextMode === 'no-context') {
+          // No context mode: don't include any files
+          logger.debug('No context mode selected - excluding all files from context');
+        } else if (chatContextMode === 'selected-files' && selectedContextFiles && selectedContextFiles.length > 0) {
+          // Selected files mode: only include the user-selected files
+          logger.debug('Selected files mode: filtering to user-selected files');
+          filteredFiles = {};
+          
+          for (const filePath of selectedContextFiles) {
+            if (files[filePath]) {
+              filteredFiles[filePath] = files[filePath];
+            }
+          }
+          
+          logger.debug(`Selected files mode - files in context: ${JSON.stringify(Object.keys(filteredFiles))}`);
+          
+          dataStream.writeMessageAnnotation({
+            type: 'codeContext',
+            files: Object.keys(filteredFiles).map((key) => {
+              let path = key;
+              
+              if (path.startsWith(WORK_DIR)) {
+                path = path.replace(WORK_DIR, '');
+              }
+              
+              return path;
+            }),
+          } as ContextAnnotation);
+        } else if (chatContextMode === 'active-file') {
+          // Active file mode: use the files that were specifically provided by the frontend
+          // The frontend should have already filtered to only include the active file
+          logger.debug('Active file mode: using files provided by frontend');
+          logger.debug(`Files provided in active file mode: ${JSON.stringify(files ? Object.keys(files) : [])}`);
+          
+          // Use all files that were provided (should be just the active file)
+          filteredFiles = files ? { ...(files as any) } : {};
+          
+          if (Object.keys(filteredFiles).length > 0) {
+            dataStream.writeMessageAnnotation({
+              type: 'codeContext',
+              files: Object.keys(filteredFiles).map((key) => {
+                let path = key;
+                
+                if (path.startsWith(WORK_DIR)) {
+                  path = path.replace(WORK_DIR, '');
+                }
+                
+                return path;
+              }),
+            } as ContextAnnotation);
+          }
+          
+          // Skip the context optimization logic for active file mode
+          // Just proceed with the files provided by the frontend
+        } else if (filePaths.length > 0 && contextOptimization) {
+          // Default behavior when no specific mode is set
           logger.debug('Generating Chat Summary');
           dataStream.writeData({
             type: 'progress',
@@ -179,7 +235,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
             },
           });
 
-          if (filteredFiles) {
+          if (Object.keys(filteredFiles).length > 0) {
             logger.debug(`files in context : ${JSON.stringify(Object.keys(filteredFiles))}`);
           }
 

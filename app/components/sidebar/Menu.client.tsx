@@ -14,6 +14,7 @@ import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { profileStore } from '~/lib/stores/profile';
 import { RepositoryHistory } from './RepositoryHistory';
+import { ChatHistory } from './ChatHistory';
 import { repositoryHistoryStore } from '~/lib/stores/repositoryHistory';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { importFolderToWorkbench } from '~/utils/workbenchImport';
@@ -119,91 +120,116 @@ export const Menu = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      // Log the delete operation to help debugging
-      console.log('Attempting to delete chat:', { id: item.id, description: item.description });
+      // Check if this is a chat history item (has urlId) or repository item
+      if (item.urlId) {
+        // This is a chat history item
+        console.log('Attempting to delete chat:', { id: item.id, description: item.description });
 
-      deleteChat(item.id)
-        .then(() => {
-          toast.success('Chat deleted successfully', {
-            position: 'bottom-right',
-            autoClose: 3000,
+        deleteChat(item.id)
+          .then(() => {
+            toast.success('Chat deleted successfully', {
+              position: 'bottom-right',
+              autoClose: 3000,
+            });
+
+            // Always refresh the list
+            loadEntries();
+
+            if (chatId.get() === item.id) {
+              // hard page navigation to clear the stores
+              console.log('Navigating away from deleted chat');
+              window.location.pathname = '/';
+            }
+          })
+          .catch((error) => {
+            console.error('Failed to delete chat:', error);
+            toast.error('Failed to delete conversation', {
+              position: 'bottom-right',
+              autoClose: 3000,
+            });
+
+            // Still try to reload entries in case data has changed
+            loadEntries();
           });
-
-          // Always refresh the list
-          loadEntries();
-
-          if (chatId.get() === item.id) {
-            // hard page navigation to clear the stores
-            console.log('Navigating away from deleted chat');
-            window.location.pathname = '/';
-          }
-        })
-        .catch((error) => {
-          console.error('Failed to delete chat:', error);
-          toast.error('Failed to delete conversation', {
-            position: 'bottom-right',
-            autoClose: 3000,
-          });
-
-          // Still try to reload entries in case data has changed
-          loadEntries();
+      } else {
+        // This is a repository item - delegate to repository history store
+        console.log('Attempting to delete repository:', { id: item.id, description: item.description });
+        repositoryHistoryStore.removeRepository(item.id);
+        toast.success('Repository removed from history', {
+          position: 'bottom-right',
+          autoClose: 3000,
         });
+        loadEntries();
+      }
     },
     [loadEntries, deleteChat],
   );
 
   const deleteSelectedItems = useCallback(
     async (itemsToDeleteIds: string[]) => {
-      if (!db || itemsToDeleteIds.length === 0) {
-        console.log('Bulk delete skipped: No DB or no items to delete.');
+      if (itemsToDeleteIds.length === 0) {
+        console.log('Bulk delete skipped: No items to delete.');
         return;
       }
-
-      console.log(`Starting bulk delete for ${itemsToDeleteIds.length} chats`, itemsToDeleteIds);
-
+  
+      console.log(`Starting bulk delete for ${itemsToDeleteIds.length} items`, itemsToDeleteIds);
+  
       let deletedCount = 0;
       const errors: string[] = [];
       const currentChatId = chatId.get();
       let shouldNavigate = false;
-
-      // Process deletions sequentially using the shared deleteChat logic
+  
+      // Process deletions sequentially - determine if it's a chat or repository item
       for (const id of itemsToDeleteIds) {
         try {
-          await deleteChat(id);
+          // Find the item in the list to determine its type
+          const item = list.find(item => item.id === id);
+            
+          if (item && item.urlId) {
+            // This is a chat history item
+            if (!db) {
+              throw new Error('Database not available');
+            }
+            await deleteChat(id);
+          } else {
+            // This is a repository item
+            repositoryHistoryStore.removeRepository(id);
+          }
+            
           deletedCount++;
-
+            
           if (id === currentChatId) {
             shouldNavigate = true;
           }
         } catch (error) {
-          console.error(`Error deleting chat ${id}:`, error);
+          console.error(`Error deleting item ${id}:`, error);
           errors.push(id);
         }
       }
-
+  
       // Show appropriate toast message
       if (errors.length === 0) {
-        toast.success(`${deletedCount} chat${deletedCount === 1 ? '' : 's'} deleted successfully`);
+        toast.success(`${deletedCount} item${deletedCount === 1 ? '' : 's'} deleted successfully`);
       } else {
-        toast.warning(`Deleted ${deletedCount} of ${itemsToDeleteIds.length} chats. ${errors.length} failed.`, {
+        toast.warning(`Deleted ${deletedCount} of ${itemsToDeleteIds.length} items. ${errors.length} failed.`, {
           autoClose: 5000,
         });
       }
-
+  
       // Reload the list after all deletions
       await loadEntries();
-
+  
       // Clear selection state
       setSelectedItems([]);
       setSelectionMode(false);
-
+  
       // Navigate if needed
       if (shouldNavigate) {
         console.log('Navigating away from deleted chat');
         window.location.pathname = '/';
       }
     },
-    [deleteChat, loadEntries, db],
+    [deleteChat, loadEntries, db, list],
   );
 
   const closeDialog = () => {
@@ -527,17 +553,36 @@ export const Menu = () => {
             )}
           </div>
           <div className="flex-1 overflow-auto px-3 pb-3">
-            <RepositoryHistory 
-              selectionMode={selectionMode}
-              selectedItems={selectedItems}
-              onToggleSelection={toggleItemSelection}
-            />
+            <div className="mb-6">
+              <div className="flex items-center justify-between text-sm px-1 py-2">
+                <div className="font-medium text-mindvex-elements-textSecondary">Your Chats</div>
+              </div>
+              <ChatHistory 
+                selectionMode={selectionMode}
+                selectedItems={selectedItems}
+                onToggleSelection={toggleItemSelection}
+              />
+            </div>
+            
+            <div className="border-t border-mindvex-elements-borderColor pt-4 mt-4">
+              <div className="flex items-center justify-between text-sm px-1 py-2">
+                <div className="font-medium text-mindvex-elements-textSecondary">Your Repos</div>
+              </div>
+              <RepositoryHistory 
+                selectionMode={selectionMode}
+                selectedItems={selectedItems}
+                onToggleSelection={toggleItemSelection}
+              />
+            </div>
+            
             <DialogRoot open={dialogContent !== null}>
               <Dialog onBackdrop={closeDialog} onClose={closeDialog}>
                 {dialogContent?.type === 'delete' && (
                   <>
                     <div className="p-6 bg-mindvex-elements-bg-depth-1">
-                      <DialogTitle className="text-mindvex-elements-textPrimary">Delete Repository?</DialogTitle>
+                      <DialogTitle className="text-mindvex-elements-textPrimary">
+                        {dialogContent.item.urlId ? 'Delete Chat?' : 'Delete Repository?'}
+                      </DialogTitle>
                       <DialogDescription className="mt-2 text-mindvex-elements-textSecondary">
                         <p>
                           You are about to delete{' '}
@@ -545,7 +590,9 @@ export const Menu = () => {
                             {dialogContent.item.description}
                           </span>
                         </p>
-                        <p className="mt-2">Are you sure you want to delete this repository?</p>
+                        <p className="mt-2">
+                          Are you sure you want to {dialogContent.item.urlId ? 'delete this chat' : 'remove this repository from history'}?
+                        </p>
                       </DialogDescription>
                     </div>
                     <div className="flex justify-end gap-3 px-6 py-4 bg-mindvex-elements-bg-depth-2 border-t border-mindvex-elements-borderColor">
@@ -568,22 +615,59 @@ export const Menu = () => {
                 {dialogContent?.type === 'bulkDelete' && (
                   <>
                     <div className="p-6 bg-mindvex-elements-bg-depth-1">
-                      <DialogTitle className="text-mindvex-elements-textPrimary">Delete Selected Repositories?</DialogTitle>
+                      <DialogTitle className="text-mindvex-elements-textPrimary">
+                        {(() => {
+                          const hasChats = dialogContent.items.some((item: any) => item.urlId);
+                          const hasRepos = dialogContent.items.some((item: any) => !item.urlId);
+                          
+                          if (hasChats && hasRepos) {
+                            return 'Delete Selected Items?';
+                          } else if (hasChats) {
+                            return 'Delete Selected Chats?';
+                          } else {
+                            return 'Delete Selected Repositories?';
+                          }
+                        })()}
+                      </DialogTitle>
                       <DialogDescription className="mt-2 text-mindvex-elements-textSecondary">
                         <p>
                           You are about to delete {dialogContent.items.length}{' '}
-                          {dialogContent.items.length === 1 ? 'repository' : 'repositories'}:
+                          {(() => {
+                            const hasChats = dialogContent.items.some((item: any) => item.urlId);
+                            const hasRepos = dialogContent.items.some((item: any) => !item.urlId);
+                            
+                            if (hasChats && hasRepos) {
+                              return 'items';
+                            } else if (hasChats) {
+                              return 'chat' + (dialogContent.items.length === 1 ? '' : 's');
+                            } else {
+                              return 'repository' + (dialogContent.items.length === 1 ? '' : 'ies');
+                            }
+                          })()}:
                         </p>
                         <div className="mt-2 max-h-32 overflow-auto border border-mindvex-elements-borderColor rounded-md bg-mindvex-elements-bg-depth-2 p-2">
                           <ul className="list-disc pl-5 space-y-1 text-mindvex-elements-textPrimary">
-                            {dialogContent.items.map((item) => (
+                            {dialogContent.items.map((item: any) => (
                               <li key={item.id} className="text-sm">
                                 <span className="font-medium text-mindvex-elements-item-contentAccent">{item.description}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
-                        <p className="mt-3">Are you sure you want to delete these repositories?</p>
+                        <p className="mt-3">
+                          Are you sure you want to {(() => {
+                            const hasChats = dialogContent.items.some((item: any) => item.urlId);
+                            const hasRepos = dialogContent.items.some((item: any) => !item.urlId);
+                            
+                            if (hasChats && hasRepos) {
+                              return 'delete these items';
+                            } else if (hasChats) {
+                              return 'delete these chats';
+                            } else {
+                              return 'remove these repositories from history';
+                            }
+                          })()}?
+                        </p>
                       </DialogDescription>
                     </div>
                     <div className="flex justify-end gap-3 px-6 py-4 bg-mindvex-elements-bg-depth-2 border-t border-mindvex-elements-borderColor">
