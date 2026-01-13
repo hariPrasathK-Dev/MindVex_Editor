@@ -50,6 +50,28 @@ class RepositoryHistoryStore {
   }
 
   addRepository(repoUrl: string, repoName: string, description?: string) {
+    // Check if repository with same URL already exists
+    const currentHistory = this._repositoryHistory.get();
+    const existingRepo = Object.values(currentHistory).find((item) => item.url === repoUrl);
+
+    if (existingRepo) {
+      // Update timestamp of existing repository instead of creating duplicate
+      const updatedItem: RepositoryHistoryItem = {
+        ...existingRepo,
+        timestamp: new Date().toISOString(),
+        description: description || existingRepo.description,
+      };
+
+      this._repositoryHistory.set({
+        ...currentHistory,
+        [existingRepo.id]: updatedItem,
+      });
+
+      this.saveToStorage();
+      return updatedItem;
+    }
+
+    // Create new repository entry if it doesn't exist
     const id = `repo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const newItem: RepositoryHistoryItem = {
       id,
@@ -59,7 +81,6 @@ class RepositoryHistoryStore {
       timestamp: new Date().toISOString(),
     };
 
-    const currentHistory = this._repositoryHistory.get();
     this._repositoryHistory.set({
       ...currentHistory,
       [id]: newItem,
