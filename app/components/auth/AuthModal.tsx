@@ -5,9 +5,10 @@ import { toast } from 'react-toastify';
 
 interface AuthModalProps {
   onClose: () => void;
+  allowClose?: boolean;
 }
 
-export function AuthModal({ onClose }: AuthModalProps) {
+export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,14 +42,16 @@ export function AuthModal({ onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="relative w-full max-w-md mx-4 bg-mindvex-elements-background-depth-2 rounded-lg shadow-2xl border border-mindvex-elements-borderColor">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary transition-colors"
-          aria-label="Close"
-        >
-          <div className="i-ph:x text-xl" />
-        </button>
+        {/* Close button - only show if allowed */}
+        {allowClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-red-500 hover:text-red-600 transition-colors p-1 rounded-lg hover:bg-red-500/10"
+            aria-label="Close"
+          >
+            <div className="i-ph:x text-xl" />
+          </button>
+        )}
 
         <div className="p-8">
           {/* Header */}

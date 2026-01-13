@@ -150,7 +150,9 @@ export default function Index() {
       </div>
 
       {/* Auth Modal */}
-      {showAuthModal && !auth.isAuthenticated && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showAuthModal && !auth.isAuthenticated && (
+        <AuthModal onClose={() => setShowAuthModal(false)} allowClose={auth.isAuthenticated} />
+      )}
     </div>
   );
 }
