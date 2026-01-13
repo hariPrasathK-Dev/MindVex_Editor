@@ -2,15 +2,15 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { motion } from 'framer-motion';
 import { useStore } from '@nanostores/react';
 import { classNames } from '~/utils/classNames';
-import { profileStore } from '~/lib/stores/profile';
-import type { TabType, Profile } from './types';
+import { authStore } from '~/lib/stores/authStore';
+import type { TabType } from './types';
 
 interface AvatarDropdownProps {
   onSelectTab: (tab: TabType) => void;
 }
 
 export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
-  const profile = useStore(profileStore) as Profile;
+  const auth = useStore(authStore);
 
   return (
     <DropdownMenu.Root>
@@ -20,19 +20,9 @@ export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          {profile?.avatar ? (
-            <img
-              src={profile.avatar}
-              alt={profile?.username || 'Profile'}
-              className="w-full h-full rounded-full object-cover"
-              loading="eager"
-              decoding="sync"
-            />
-          ) : (
-            <div className="w-full h-full rounded-full flex items-center justify-center bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500">
-              <div className="i-ph:user w-6 h-6" />
-            </div>
-          )}
+          <div className="w-full h-full rounded-full flex items-center justify-center bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500">
+            <div className="i-ph:user w-6 h-6" />
+          </div>
         </motion.button>
       </DropdownMenu.Trigger>
 
@@ -56,25 +46,15 @@ export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
             )}
           >
             <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-white dark:bg-gray-800 shadow-sm">
-              {profile?.avatar ? (
-                <img
-                  src={profile.avatar}
-                  alt={profile?.username || 'Profile'}
-                  className={classNames('w-full h-full', 'object-cover', 'transform-gpu', 'image-rendering-crisp')}
-                  loading="eager"
-                  decoding="sync"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 font-medium text-lg">
-                  <div className="i-ph:user w-6 h-6" />
-                </div>
-              )}
+              <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 font-medium text-lg">
+                <div className="i-ph:user w-6 h-6" />
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                {profile?.username || 'Guest User'}
+                {auth.user?.fullName || auth.user?.email || 'Guest User'}
               </div>
-              {profile?.bio && <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{profile.bio}</div>}
+              {auth.user?.email && <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{auth.user.email}</div>}
             </div>
           </div>
 
@@ -167,6 +147,28 @@ export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
           >
             <div className="i-ph:question w-4 h-4 text-gray-400 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors" />
             Help & Documentation
+          </DropdownMenu.Item>
+
+          <div className="my-1 border-t border-gray-200/50 dark:border-gray-800/50" />
+
+          <DropdownMenu.Item
+            className={classNames(
+              'flex items-center gap-2 px-4 py-2.5',
+              'text-sm text-red-600 dark:text-red-400',
+              'hover:bg-red-50 dark:hover:bg-red-500/10',
+              'cursor-pointer transition-all duration-200',
+              'outline-none',
+              'group',
+            )}
+            onClick={() => {
+              import('~/lib/stores/authStore').then(({ clearAuth }) => {
+                clearAuth();
+                window.location.href = '/';
+              });
+            }}
+          >
+            <div className="i-ph:sign-out w-4 h-4" />
+            Logout
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
