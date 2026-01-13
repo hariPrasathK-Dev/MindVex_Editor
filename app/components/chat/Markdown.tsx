@@ -235,8 +235,9 @@ ${message}`,
  * - Safely handles edge cases like empty input or artifacts at start/end of content
  */
 export const stripCodeFenceFromArtifact = (content: string) => {
-  if (!content || !content.includes('__mindvexArtifact__'))
+  if (!content || !content.includes('__mindvexArtifact__')) {
     return content;
+  }
 
   const lines = content.split('\n');
   const artifactLineIndex = lines.findIndex((line) => line.includes('__mindvexArtifact__'));

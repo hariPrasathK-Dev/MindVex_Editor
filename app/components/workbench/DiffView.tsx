@@ -768,6 +768,7 @@ export const DiffView = memo(({ fileHistory, setFileHistory }: DiffViewProps) =>
   const history = fileHistory[selectedFile];
   const effectiveOriginalContent = history?.originalContent || originalContent;
   const languageFromExt = getLanguageFromExtension(selectedFile.split('.').pop() || '');
+
   // Use 'plaintext' instead of 'unknown' to avoid Shiki errors
   const language = languageFromExt === 'unknown' ? 'plaintext' : languageFromExt;
 

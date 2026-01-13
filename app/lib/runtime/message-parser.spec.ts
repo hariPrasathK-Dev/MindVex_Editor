@@ -63,7 +63,7 @@ describe('StreamingMessageParser', () => {
         [
           'Some text before <mindvexArti',
           'fact',
-          ' title="Some title" id="artifact_1" type="bundled" >foo</mindvexArtifact> Some more text'
+          ' title="Some title" id="artifact_1" type="bundled" >foo</mindvexArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',
@@ -77,7 +77,7 @@ describe('StreamingMessageParser', () => {
           't title="Some title" id="artifact_1"',
           ' ',
           '>',
-          'foo</mindvexArtifact> Some more text'
+          'foo</mindvexArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',
@@ -90,7 +90,7 @@ describe('StreamingMessageParser', () => {
           'fact',
           ' title="Some title" id="artifact_1"',
           ' >fo',
-          'o</mindvexArtifact> Some more text'
+          'o</mindvexArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',

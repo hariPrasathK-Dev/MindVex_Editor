@@ -11,7 +11,6 @@ import { SendButton } from './SendButton.client';
 import { IconButton } from '~/components/ui/IconButton';
 import { toast } from 'react-toastify';
 import { SpeechRecognitionButton } from '~/components/chat/SpeechRecognition';
-import { SupabaseConnection } from './SupabaseConnection';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
 import styles from './BaseChat.module.scss';
 import type { ProviderInfo } from '~/types/model';
@@ -245,7 +244,11 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             minHeight: props.TEXTAREA_MIN_HEIGHT,
             maxHeight: props.TEXTAREA_MAX_HEIGHT,
           }}
-          placeholder={props.chatMode === 'build' ? 'How can MindVex help you with your code?' : 'What would you like to discuss about your code?'}
+          placeholder={
+            props.chatMode === 'build'
+              ? 'How can MindVex help you with your code?'
+              : 'What would you like to discuss about your code?'
+          }
           translate="no"
         />
         <ClientOnly>
@@ -267,29 +270,36 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             />
           )}
         </ClientOnly>
-        
+
         {/* Display selected files when in selected-files mode */}
-        {props.chatContextMode === 'selected-files' && props.selectedContextFiles && props.selectedContextFiles.length > 0 && (
-          <div className="mt-2 p-2 bg-mindvex-elements-background-depth-2 rounded border border-mindvex-elements-borderColor">
-            <div className="flex items-center gap-1 mb-1">
-              <span className="text-xs font-medium text-mindvex-elements-textPrimary">Selected Files:</span>
-              <button 
-                className="text-xs text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary"
-                onClick={() => props.setSelectedContextFiles?.([])}
-              >
-                Clear
-              </button>
+        {props.chatContextMode === 'selected-files' &&
+          props.selectedContextFiles &&
+          props.selectedContextFiles.length > 0 && (
+            <div className="mt-2 p-2 bg-mindvex-elements-background-depth-2 rounded border border-mindvex-elements-borderColor">
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-xs font-medium text-mindvex-elements-textPrimary">Selected Files:</span>
+                <button
+                  className="text-xs text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary"
+                  onClick={() => props.setSelectedContextFiles?.([])}
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {props.selectedContextFiles.map((filePath, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-1 bg-mindvex-elements-background-depth-1 px-2 py-1 rounded text-xs"
+                  >
+                    <File className="w-3 h-3" />
+                    <span className="text-mindvex-elements-textSecondary truncate max-w-[100px]">
+                      {filePath.split('/').pop()}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1">
-              {props.selectedContextFiles.map((filePath, index) => (
-                <div key={index} className="flex items-center gap-1 bg-mindvex-elements-background-depth-1 px-2 py-1 rounded text-xs">
-                  <File className="w-3 h-3" />
-                  <span className="text-mindvex-elements-textSecondary truncate max-w-[100px]">{filePath.split('/').pop()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
         <div className="flex justify-between items-center text-sm p-4 pt-2">
           <div className="flex gap-1 items-center">
             <ColorSchemeDialog designScheme={props.designScheme} setDesignScheme={props.setDesignScheme} />
@@ -297,12 +307,15 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             <IconButton title="Upload file" className="transition-all" onClick={() => props.handleFileUpload()}>
               <div className="i-ph:paperclip text-xl"></div>
             </IconButton>
-            <AddContextButton onContextFilesSelected={props.onContextFilesSelected} onFilesSelected={(selectedFiles) => {
-              // Update the selected context files with the newly selected files
-              const filePaths = Object.keys(selectedFiles);
-              props.setSelectedContextFiles?.(filePaths);
-              toast.success(`Added ${filePaths.length} files to context`);
-            }} />
+            <AddContextButton
+              onContextFilesSelected={props.onContextFilesSelected}
+              onFilesSelected={(selectedFiles) => {
+                // Update the selected context files with the newly selected files
+                const filePaths = Object.keys(selectedFiles);
+                props.setSelectedContextFiles?.(filePaths);
+                toast.success(`Added ${filePaths.length} files to context`);
+              }}
+            />
             <IconButton
               title="Enhance prompt"
               disabled={props.input.length === 0 || props.enhancingPrompt}
@@ -356,14 +369,16 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
               <div className={`i-ph:caret-${props.isModelSettingsCollapsed ? 'right' : 'down'} text-lg`} />
               {props.isModelSettingsCollapsed ? <span className="text-xs">{props.model}</span> : <span />}
             </IconButton>
-            
+
             {/* Context Mode Selector */}
             {props.chatContextMode !== undefined && props.setChatContextMode !== undefined && (
               <div className="flex items-center gap-1">
                 <span className="text-xs text-mindvex-elements-textTertiary">Context:</span>
                 <select
                   value={props.chatContextMode}
-                  onChange={(e) => props.setChatContextMode?.(e.target.value as 'active-file' | 'selected-files' | 'no-context')}
+                  onChange={(e) =>
+                    props.setChatContextMode?.(e.target.value as 'active-file' | 'selected-files' | 'no-context')
+                  }
                   className="bg-mindvex-elements-background-depth-2 border border-mindvex-elements-borderColor rounded px-2 py-1 text-xs"
                 >
                   <option value="active-file">Active File</option>
@@ -379,7 +394,6 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
               <kbd className="kdb px-1.5 py-0.5 rounded bg-mindvex-elements-background-depth-2">Return</kbd> a new line
             </div>
           ) : null}
-          <SupabaseConnection />
           <ExpoQrModal open={props.qrModalOpen} onClose={() => props.setQrModalOpen(false)} />
         </div>
       </div>

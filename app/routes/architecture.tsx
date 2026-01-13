@@ -8,7 +8,10 @@ import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'MindVex - Architecture Diagram' }, { name: 'description', content: 'Visualize project architecture' }];
+  return [
+    { title: 'MindVex - Architecture Diagram' },
+    { name: 'description', content: 'Visualize project architecture' },
+  ];
 };
 
 export const loader = () => json({});

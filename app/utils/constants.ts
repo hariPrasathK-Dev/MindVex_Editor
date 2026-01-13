@@ -38,7 +38,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Expo starter template for building cross-platform mobile apps',
     githubRepo: 'xKevIsDev/mindvex-expo-template',
     tags: ['mobile', 'expo', 'mobile-app', 'android', 'iphone'],
-    icon: 'i-mindvex:expo'
+    icon: 'i-mindvex:expo',
   },
   {
     name: 'Basic Astro',
@@ -46,7 +46,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Lightweight Astro starter template for building fast static websites',
     githubRepo: 'xKevIsDev/mindvex-astro-basic-template',
     tags: ['astro', 'blog', 'performance'],
-    icon: 'i-mindvex:astro'
+    icon: 'i-mindvex:astro',
   },
   {
     name: 'NextJS Shadcn',
@@ -54,7 +54,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Next.js starter fullstack template integrated with shadcn/ui components and styling system',
     githubRepo: 'xKevIsDev/mindvex-nextjs-shadcn-template',
     tags: ['nextjs', 'react', 'typescript', 'shadcn', 'tailwind'],
-    icon: 'i-mindvex:nextjs'
+    icon: 'i-mindvex:nextjs',
   },
   {
     name: 'Vite Shadcn',
@@ -62,7 +62,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Vite starter fullstack template integrated with shadcn/ui components and styling system',
     githubRepo: 'xKevIsDev/vite-shadcn',
     tags: ['vite', 'react', 'typescript', 'shadcn', 'tailwind'],
-    icon: 'i-mindvex:shadcn'
+    icon: 'i-mindvex:shadcn',
   },
   {
     name: 'Qwik Typescript',
@@ -70,7 +70,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Qwik framework starter with TypeScript for building resumable applications',
     githubRepo: 'xKevIsDev/mindvex-qwik-ts-template',
     tags: ['qwik', 'typescript', 'performance', 'resumable'],
-    icon: 'i-mindvex:qwik'
+    icon: 'i-mindvex:qwik',
   },
   {
     name: 'Remix Typescript',
@@ -78,7 +78,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Remix framework starter with TypeScript for full-stack web applications',
     githubRepo: 'xKevIsDev/mindvex-remix-ts-template',
     tags: ['remix', 'typescript', 'fullstack', 'react'],
-    icon: 'i-mindvex:remix'
+    icon: 'i-mindvex:remix',
   },
   {
     name: 'Slidev',
@@ -86,7 +86,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Slidev starter template for creating developer-friendly presentations using Markdown',
     githubRepo: 'xKevIsDev/mindvex-slidev-template',
     tags: ['slidev', 'presentation', 'markdown'],
-    icon: 'i-mindvex:slidev'
+    icon: 'i-mindvex:slidev',
   },
   {
     name: 'Sveltekit',
@@ -94,7 +94,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'SvelteKit starter template for building fast, efficient web applications',
     githubRepo: 'mindvex-sveltekit-template',
     tags: ['svelte', 'sveltekit', 'typescript'],
-    icon: 'i-mindvex:svelte'
+    icon: 'i-mindvex:svelte',
   },
   {
     name: 'Vanilla Vite',

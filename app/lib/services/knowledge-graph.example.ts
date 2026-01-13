@@ -67,7 +67,7 @@ class User {
 
 /**
  * Expected Knowledge Graph for Python Example:
- * 
+ *
  * NODES:
  * - /example.py#Calculator (class)
  * - /example.py#__init__ (function)
@@ -75,7 +75,7 @@ class User {
  * - /example.py#multiply (function)
  * - /example.py#main (function)
  * - /example.py#module (module)
- * 
+ *
  * EDGES:
  * - /example.py#main calls /example.py#Calculator
  * - /example.py#main calls /example.py#add
@@ -85,7 +85,7 @@ class User {
 
 /**
  * Expected Knowledge Graph for Java Example:
- * 
+ *
  * NODES:
  * - /example.java#UserManager (class)
  * - /example.java#User (class)
@@ -93,14 +93,11 @@ class User {
  * - /example.py#findUser (function)
  * - /example.java#getName (function)
  * - /example.java#module (module)
- * 
+ *
  * EDGES:
  * - /example.java#import_java.util.ArrayList to module
  * - /example.java#import_java.util.List to module
  * - /example.java#findUser calls /example.java#getName
  */
 
-export {
-  pythonExample,
-  javaExample
-};
+export { pythonExample, javaExample };

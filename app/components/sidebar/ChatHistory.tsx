@@ -21,7 +21,7 @@ export function ChatHistory({
 }: ChatHistoryProps) {
   const { exportChat, duplicateCurrentChat } = useChatHistory();
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // We need to fetch the chat history list from the database
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,8 +31,10 @@ export function ChatHistory({
     const loadChatHistory = async () => {
       try {
         const { db, getAll } = await import('~/lib/persistence');
+
         if (db) {
           const list = await getAll(db);
+
           // Filter to only include chats with descriptions
           const filteredList = list.filter((item: any) => item.urlId && item.description);
           setChatHistory(filteredList);
@@ -49,15 +51,14 @@ export function ChatHistory({
   });
 
   // Filter and sort chat history
-  const allChats = chatHistory.filter(chat => 
-    chat.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    chat.urlId?.toLowerCase().includes(searchTerm.toLowerCase())
+  const allChats = chatHistory.filter(
+    (chat) =>
+      chat.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      chat.urlId?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Sort chats by timestamp (newest first)
-  const sortedChats = allChats.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
+  const sortedChats = allChats.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   // Group chats by date
   const groupedChats = binDates(sortedChats);
@@ -68,15 +69,17 @@ export function ChatHistory({
 
     try {
       const { db, deleteById } = await import('~/lib/persistence');
+
       if (!db) {
         throw new Error('Database not available');
       }
 
       await deleteById(db, item.id);
       toast.success('Chat deleted successfully');
-      
+
       // Refresh the chat history
       const persistenceModule = await import('~/lib/persistence');
+
       if (persistenceModule.db) {
         const list = await persistenceModule.getAll(persistenceModule.db);
         const filteredList = list.filter((item: any) => item.urlId && item.description);
@@ -93,11 +96,9 @@ export function ChatHistory({
       <div className="flex items-center justify-between text-sm px-1 py-2">
         <div className="font-medium text-mindvex-elements-textSecondary">Your Chats</div>
       </div>
-      
+
       {loading ? (
-        <div className="px-4 text-gray-500 dark:text-gray-400 text-sm py-2">
-          Loading chats...
-        </div>
+        <div className="px-4 text-gray-500 dark:text-gray-400 text-sm py-2">Loading chats...</div>
       ) : sortedChats.length === 0 ? (
         <div className="px-4 text-gray-500 dark:text-gray-400 text-sm py-2">
           {allChats.length === 0 ? 'No chats yet' : 'No matches found'}

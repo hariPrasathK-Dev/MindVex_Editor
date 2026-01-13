@@ -55,9 +55,7 @@ export const RightChatPanel = memo(() => {
           />
         </div>
         <div className="flex-1 overflow-hidden">
-          <ClientOnly fallback={<BaseChat inRightPanel={true} />}>
-            {() => <Chat inRightPanel={true} />}
-          </ClientOnly>
+          <ClientOnly fallback={<BaseChat inRightPanel={true} />}>{() => <Chat inRightPanel={true} />}</ClientOnly>
         </div>
       </div>
     </Panel>

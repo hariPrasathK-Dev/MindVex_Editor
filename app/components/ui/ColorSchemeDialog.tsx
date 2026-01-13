@@ -68,8 +68,8 @@ export const ColorSchemeDialog: React.FC<ColorSchemeDialogProps> = ({ setDesignS
         </h3>
         <button
           onClick={handleReset}
-          className="text-sm bg-transparent hover:bg-mindvex-elements-bg-depth-2 text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary rounded-lg flex items-center gap-2 transition-all duration-200">
-        
+          className="text-sm bg-transparent hover:bg-mindvex-elements-bg-depth-2 text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary rounded-lg flex items-center gap-2 transition-all duration-200"
+        >
           <span className="i-ph:arrow-clockwise text-sm" />
           Reset
         </button>
@@ -79,8 +79,8 @@ export const ColorSchemeDialog: React.FC<ColorSchemeDialogProps> = ({ setDesignS
         {paletteRoles.map((role) => (
           <div
             key={role.key}
-            className="group flex items-center gap-4 p-4 rounded-xl bg-mindvex-elements-bg-depth-3 hover:bg-mindvex-elements-bg-depth-2 border border-transparent hover:border-mindvex-elements-borderColor transition-all duration-200">
-          
+            className="group flex items-center gap-4 p-4 rounded-xl bg-mindvex-elements-bg-depth-3 hover:bg-mindvex-elements-bg-depth-2 border border-transparent hover:border-mindvex-elements-borderColor transition-all duration-200"
+          >
             <div className="relative flex-shrink-0">
               <div
                 className="w-12 h-12 rounded-xl shadow-md cursor-pointer transition-all duration-200 hover:scale-110 ring-2 ring-transparent hover:ring-mindvex-elements-borderColorActive"
@@ -139,7 +139,9 @@ export const ColorSchemeDialog: React.FC<ColorSchemeDialogProps> = ({ setDesignS
             <div className="text-center space-y-2">
               <div
                 className={`text-2xl font-medium transition-colors ${
-                  font.includes(f.key) ? 'text-mindvex-elements-item-contentAccent' : 'text-mindvex-elements-textPrimary'
+                  font.includes(f.key)
+                    ? 'text-mindvex-elements-item-contentAccent'
+                    : 'text-mindvex-elements-textPrimary'
                 }`}
                 style={{ fontFamily: f.key }}
               >
@@ -147,7 +149,9 @@ export const ColorSchemeDialog: React.FC<ColorSchemeDialogProps> = ({ setDesignS
               </div>
               <div
                 className={`text-sm font-medium transition-colors ${
-                  font.includes(f.key) ? 'text-mindvex-elements-item-contentAccent' : 'text-mindvex-elements-textSecondary'
+                  font.includes(f.key)
+                    ? 'text-mindvex-elements-item-contentAccent'
+                    : 'text-mindvex-elements-textSecondary'
                 }`}
               >
                 {f.label}
@@ -204,7 +208,7 @@ export const ColorSchemeDialog: React.FC<ColorSchemeDialogProps> = ({ setDesignS
                     background: isSelected
                       ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                       : 'var(--mindvex-elements-bg-depth-3)',
-                    color: isSelected ? 'white' : 'var(--mindvex-elements-textSecondary)'
+                    color: isSelected ? 'white' : 'var(--mindvex-elements-textSecondary)',
                   }),
                 }}
               >

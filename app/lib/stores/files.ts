@@ -554,7 +554,9 @@ export class FilesStore {
       const relativePath = path.relative(webcontainer.workdir, filePath);
 
       if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error(`EINVAL: invalid file path, write '${filePath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`);
+        throw new Error(
+          `EINVAL: invalid file path, write '${filePath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`,
+        );
       }
 
       const oldContent = this.getFile(filePath)?.content;
@@ -773,13 +775,15 @@ export class FilesStore {
     try {
       console.log('WebContainer workdir:', webcontainer.workdir);
       console.log('Trying to create file at path:', filePath);
-      
+
       const relativePath = path.relative(webcontainer.workdir, filePath);
 
       console.log('Computed relative path:', relativePath);
-      
+
       if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error(`EINVAL: invalid file path, create '${filePath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`);
+        throw new Error(
+          `EINVAL: invalid file path, create '${filePath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`,
+        );
       }
 
       const dirPath = path.dirname(relativePath);
@@ -834,7 +838,9 @@ export class FilesStore {
       const relativePath = path.relative(webcontainer.workdir, folderPath);
 
       if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error(`EINVAL: invalid folder path, create '${folderPath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`);
+        throw new Error(
+          `EINVAL: invalid folder path, create '${folderPath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`,
+        );
       }
 
       await webcontainer.fs.mkdir(relativePath, { recursive: true });
@@ -857,7 +863,9 @@ export class FilesStore {
       const relativePath = path.relative(webcontainer.workdir, filePath);
 
       if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error(`EINVAL: invalid file path, delete '${filePath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`);
+        throw new Error(
+          `EINVAL: invalid file path, delete '${filePath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`,
+        );
       }
 
       await webcontainer.fs.rm(relativePath);
@@ -889,7 +897,9 @@ export class FilesStore {
       const relativePath = path.relative(webcontainer.workdir, folderPath);
 
       if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error(`EINVAL: invalid folder path, delete '${folderPath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`);
+        throw new Error(
+          `EINVAL: invalid folder path, delete '${folderPath}' is not within workdir '${webcontainer.workdir}'. Relative path computed: '${relativePath}'`,
+        );
       }
 
       await webcontainer.fs.rm(relativePath, { recursive: true });
@@ -931,7 +941,7 @@ export class FilesStore {
   #persistDeletedPaths() {
     try {
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('mindvex-deleted-paths', JSON.stringify([...this.#deletedPaths]))
+        localStorage.setItem('mindvex-deleted-paths', JSON.stringify([...this.#deletedPaths]));
       }
     } catch (error) {
       logger.error('Failed to persist deleted paths to localStorage', error);

@@ -7,7 +7,10 @@ import BackgroundRays from '~/components/ui/BackgroundRays';
 import { redirect } from '@remix-run/cloudflare';
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'MindVex - Chat with Your Code' }, { name: 'description', content: 'MindVex AI assistant for code discussions and analysis' }];
+  return [
+    { title: 'MindVex - Chat with Your Code' },
+    { name: 'description', content: 'MindVex AI assistant for code discussions and analysis' },
+  ];
 };
 
 export async function loader() {

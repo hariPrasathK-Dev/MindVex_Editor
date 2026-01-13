@@ -79,28 +79,29 @@ export const EditorPanel = memo(
       // Make sure unsavedFiles is a Set before calling has()
       return unsavedFiles instanceof Set && unsavedFiles.has(editorDocument.filePath);
     }, [editorDocument, unsavedFiles]);
-    
+
     // Multi-tab functionality
     const [openTabs, setOpenTabs] = useState<string[]>(selectedFile ? [selectedFile] : []);
     const [activeTab, setActiveTab] = useState<string | undefined>(selectedFile);
-    
+
     // Handle file selection to open in a new tab
     const handleFileSelectWithTab = (filePath: string | undefined) => {
       if (filePath) {
         // Add file to tabs if not already open
         if (!openTabs.includes(filePath)) {
-          setOpenTabs(prev => [...prev, filePath]);
+          setOpenTabs((prev) => [...prev, filePath]);
         }
+
         setActiveTab(filePath);
         onFileSelect?.(filePath);
       }
     };
-    
+
     // Close a tab
     const closeTab = (filePath: string) => {
-      const newTabs = openTabs.filter(tab => tab !== filePath);
+      const newTabs = openTabs.filter((tab) => tab !== filePath);
       setOpenTabs(newTabs);
-      
+
       if (activeTab === filePath) {
         // If closing active tab, switch to another tab or clear selection
         if (newTabs.length > 0) {
@@ -112,11 +113,11 @@ export const EditorPanel = memo(
         }
       }
     };
-    
+
     // Update open tabs when a new file is selected
     useEffect(() => {
       if (selectedFile && !openTabs.includes(selectedFile)) {
-        setOpenTabs(prev => [...prev, selectedFile]);
+        setOpenTabs((prev) => [...prev, selectedFile]);
         setActiveTab(selectedFile);
       }
     }, [selectedFile, openTabs]);
@@ -191,7 +192,7 @@ export const EditorPanel = memo(
                 {openTabs.map((filePath) => {
                   const fileName = filePath.split('/').pop() || filePath;
                   const isUnsaved = unsavedFiles?.has(filePath);
-                  
+
                   return (
                     <div
                       key={filePath}
@@ -220,7 +221,7 @@ export const EditorPanel = memo(
                   );
                 })}
               </div>
-              
+
               <div className="h-full flex flex-col overflow-hidden">
                 {activeTab ? (
                   <>
@@ -272,7 +273,7 @@ export const EditorPanel = memo(
                 )}
               </div>
             </Panel>
-            
+
             <PanelResizeHandle />
             <RightChatPanel />
           </PanelGroup>

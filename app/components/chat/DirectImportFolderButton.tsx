@@ -25,16 +25,20 @@ export const DirectImportFolderButton: React.FC<DirectImportFolderButtonProps> =
     try {
       // Get the folder name from the first file's path
       const folderName = files[0]?.webkitRelativePath.split('/')[0] || 'Unknown Folder';
-      
+
       // Show options to add to existing workspace or create new workspace
-      const addToExisting = window.confirm(`Do you want to add '${folderName}' to the existing workspace?\n\nClick 'OK' to add to existing workspace, 'Cancel' to create a new workspace (replacing current content)`);
-      
+      const addToExisting = window.confirm(
+        `Do you want to add '${folderName}' to the existing workspace?\n\nClick 'OK' to add to existing workspace, 'Cancel' to create a new workspace (replacing current content)`,
+      );
+
       await importFolderToWorkbench(files, addToExisting);
-      
+
       // Add to repository history
       repositoryHistoryStore.addRepository(`folder://${folderName}`, folderName, `Imported folder: ${folderName}`);
-      
-      toast.success(`Folder ${folderName} imported and added to history ${addToExisting ? 'with existing content' : '(workspace cleared)'}`);
+
+      toast.success(
+        `Folder ${folderName} imported and added to history ${addToExisting ? 'with existing content' : '(workspace cleared)'}`,
+      );
     } catch (error) {
       console.error('Failed to import folder to workbench:', error);
       toast.error('Failed to import folder to workbench');

@@ -20,33 +20,36 @@ export const AddContextButton = ({ onFilesSelected, onContextFilesSelected }: Ad
 
   const toggleFileSelection = (filePath: string) => {
     const newSelected = new Set(selectedFiles);
+
     if (newSelected.has(filePath)) {
       newSelected.delete(filePath);
     } else {
       newSelected.add(filePath);
     }
+
     setSelectedFiles(newSelected);
   };
 
   const handleConfirm = () => {
     const selectedFileMap: FileMap = {};
-    selectedFiles.forEach(filePath => {
+    selectedFiles.forEach((filePath) => {
       const file = files[filePath];
+
       if (file) {
         selectedFileMap[filePath] = file;
       }
     });
-    
+
     // Call the parent's context files handler if available
     if (onContextFilesSelected) {
       onContextFilesSelected(selectedFileMap);
     }
-    
+
     // Also call the original onFilesSelected if available
     if (onFilesSelected) {
       onFilesSelected(selectedFileMap);
     }
-    
+
     setIsOpen(false);
   };
 
@@ -58,13 +61,15 @@ export const AddContextButton = ({ onFilesSelected, onContextFilesSelected }: Ad
     entries.forEach(([path, dirent]) => {
       if (path.startsWith(basePath)) {
         const relativePath = path.substring(basePath.length);
-        const pathParts = relativePath.split('/').filter(p => p);
-        
-        if (pathParts.length === 0) return; // Skip root
-        
+        const pathParts = relativePath.split('/').filter((p) => p);
+
+        if (pathParts.length === 0) {
+          return;
+        } // Skip root
+
         const firstPart = pathParts[0];
         const fullPath = basePath + firstPart;
-        
+
         if (dirent?.type === 'folder') {
           if (!folders.some(([folderPath]) => folderPath === fullPath)) {
             folders.push([fullPath, dirent]);
@@ -89,10 +94,13 @@ export const AddContextButton = ({ onFilesSelected, onContextFilesSelected }: Ad
             {renderFileTree(files, folderPath + '/')}
           </div>
         ))}
-        
+
         {/* Render files */}
         {fileEntries.map(([filePath, dirent]) => (
-          <div key={filePath} className="flex items-center py-1 hover:bg-mindvex-elements-background-depth-2 rounded px-2">
+          <div
+            key={filePath}
+            className="flex items-center py-1 hover:bg-mindvex-elements-background-depth-2 rounded px-2"
+          >
             <Checkbox
               checked={selectedFiles.has(filePath)}
               onCheckedChange={() => toggleFileSelection(filePath)}
@@ -133,9 +141,7 @@ export const AddContextButton = ({ onFilesSelected, onContextFilesSelected }: Ad
               <Button variant="outline" onClick={() => setIsOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleConfirm}>
-                Confirm ({selectedFiles.size} selected)
-              </Button>
+              <Button onClick={handleConfirm}>Confirm ({selectedFiles.size} selected)</Button>
             </div>
           </div>
         </RadixDialog.Content>

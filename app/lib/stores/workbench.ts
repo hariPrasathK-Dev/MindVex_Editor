@@ -34,7 +34,15 @@ export type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 type Artifacts = MapStore<Record<string, ArtifactState>>;
 
-export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard' | 'quick-actions' | 'arch-graph' | 'change-impact' | 'cycle-detection';
+export type WorkbenchViewType =
+  | 'code'
+  | 'diff'
+  | 'preview'
+  | 'dashboard'
+  | 'quick-actions'
+  | 'arch-graph'
+  | 'change-impact'
+  | 'cycle-detection';
 
 // Additional state for Quick Actions sub-views
 export const quickActionsStore = {
@@ -174,7 +182,7 @@ export class WorkbenchStore {
 
     // Force a refresh of the file tree UI by updating the files store atom first
     this.#filesStore.files.set(files);
-    
+
     if (autoSelectFirstFile && this.#filesStore.filesCount > 0) {
       // we find the first file and select it, regardless of current document state
       for (const [filePath, dirent] of Object.entries(files)) {
@@ -221,7 +229,7 @@ export class WorkbenchStore {
 
       this.unsavedFiles.set(newUnsavedFiles);
     }
-    
+
     // Save workspace state after document content is changed
     setTimeout(() => {
       this.saveWorkspaceState();
@@ -264,7 +272,7 @@ export class WorkbenchStore {
     newUnsavedFiles.delete(filePath);
 
     this.unsavedFiles.set(newUnsavedFiles);
-    
+
     // Save workspace state after file is saved
     setTimeout(() => {
       this.saveWorkspaceState();
@@ -279,7 +287,7 @@ export class WorkbenchStore {
     }
 
     await this.saveFile(currentDocument.filePath);
-    
+
     // Save workspace state after current document is saved
     setTimeout(() => {
       this.saveWorkspaceState();
@@ -307,7 +315,7 @@ export class WorkbenchStore {
     for (const filePath of this.unsavedFiles.get()) {
       await this.saveFile(filePath);
     }
-    
+
     // Save workspace state after all files are saved
     setTimeout(() => {
       this.saveWorkspaceState();
@@ -317,21 +325,21 @@ export class WorkbenchStore {
   async createFileWithoutSelecting(filePath: string, content: string | Uint8Array = '') {
     try {
       console.log('Attempting to create file (no select):', filePath);
-      
+
       const success = await this.#filesStore.createFile(filePath, content);
 
       if (success) {
         console.log('Successfully created file (no select):', filePath);
-        
+
         // Update editor documents to reflect the newly created file
         const allFiles = this.files.get();
-        
+
         // Force a refresh of the file tree UI by updating the files store atom
         this.#filesStore.files.set(allFiles);
-        
+
         // Update editor documents after setting files atom
         this.setDocuments(allFiles, false);
-        
+
         /*
          * For empty files, we need to ensure they're not marked as unsaved
          * Only check for empty string, not empty Uint8Array
@@ -341,7 +349,7 @@ export class WorkbenchStore {
           newUnsavedFiles.delete(filePath);
           this.unsavedFiles.set(newUnsavedFiles);
         }
-        
+
         // Save workspace state after file is created
         setTimeout(() => {
           this.saveWorkspaceState();
@@ -352,12 +360,14 @@ export class WorkbenchStore {
     } catch (error) {
       console.error('Failed to create file without selecting:', error);
       console.error('File path:', filePath);
-      
+
       // Provide more specific error message for path validation issues
       if (error instanceof Error && error.message.includes('invalid file path')) {
-        throw new Error(`File path validation failed: ${filePath}. Make sure the file path is within the project directory.`);
+        throw new Error(
+          `File path validation failed: ${filePath}. Make sure the file path is within the project directory.`,
+        );
       }
-      
+
       throw error;
     }
   }
@@ -431,20 +441,20 @@ export class WorkbenchStore {
   async createFile(filePath: string, content: string | Uint8Array = '') {
     try {
       console.log('Attempting to create file:', filePath);
-      
+
       const success = await this.#filesStore.createFile(filePath, content);
 
       if (success) {
         console.log('Successfully created file:', filePath);
-        
+
         // Update editor documents to reflect the newly created file
         const allFiles = this.files.get();
-        
+
         this.setSelectedFile(filePath);
-        
+
         // Force a refresh of the file tree UI by updating the files store atom
         this.#filesStore.files.set(allFiles);
-        
+
         // Update editor documents after setting files atom
         this.setDocuments(allFiles, false);
 
@@ -457,7 +467,7 @@ export class WorkbenchStore {
           newUnsavedFiles.delete(filePath);
           this.unsavedFiles.set(newUnsavedFiles);
         }
-        
+
         // Save workspace state after file is created
         setTimeout(() => {
           this.saveWorkspaceState();
@@ -468,12 +478,14 @@ export class WorkbenchStore {
     } catch (error) {
       console.error('Failed to create file:', error);
       console.error('File path:', filePath);
-      
+
       // Provide more specific error message for path validation issues
       if (error instanceof Error && error.message.includes('invalid file path')) {
-        throw new Error(`File path validation failed: ${filePath}. Make sure the file path is within the project directory.`);
+        throw new Error(
+          `File path validation failed: ${filePath}. Make sure the file path is within the project directory.`,
+        );
       }
-      
+
       throw error;
     }
   }
@@ -481,23 +493,23 @@ export class WorkbenchStore {
   async createFolder(folderPath: string) {
     try {
       const success = await this.#filesStore.createFolder(folderPath);
-      
+
       if (success) {
         // Update editor documents to reflect the newly created folder
         const allFiles = this.files.get();
-        
+
         // Force a refresh of the file tree UI by updating the files store atom
         this.#filesStore.files.set(allFiles);
-        
+
         // Update editor documents after setting files atom
         this.setDocuments(allFiles, false);
-        
+
         // Save workspace state after folder is created
         setTimeout(() => {
           this.saveWorkspaceState();
         }, 0);
       }
-      
+
       return success;
     } catch (error) {
       console.error('Failed to create folder:', error);
@@ -533,16 +545,16 @@ export class WorkbenchStore {
 
           this.setSelectedFile(nextFile);
         }
-        
+
         // Update editor documents to reflect the deleted file
         const allFiles = this.files.get();
-        
+
         // Force a refresh of the file tree UI by updating the files store atom
         this.#filesStore.files.set(allFiles);
-        
+
         // Update editor documents after setting files atom
         this.setDocuments(allFiles, false);
-        
+
         // Save workspace state after file is deleted
         setTimeout(() => {
           this.saveWorkspaceState();
@@ -590,16 +602,16 @@ export class WorkbenchStore {
 
           this.setSelectedFile(nextFile);
         }
-        
+
         // Update editor documents to reflect the deleted folder
         const allFiles = this.files.get();
-        
+
         // Force a refresh of the file tree UI by updating the files store atom
         this.#filesStore.files.set(allFiles);
-        
+
         // Update editor documents after setting files atom
         this.setDocuments(allFiles, false);
-        
+
         // Save workspace state after folder is deleted
         setTimeout(() => {
           this.saveWorkspaceState();
@@ -839,7 +851,7 @@ export class WorkbenchStore {
       // Get all current file paths
       const files = this.files.get();
       const filePaths = Object.keys(files);
-      
+
       // Delete all files
       for (const filePath of filePaths) {
         if (files[filePath]?.type === 'file') {
@@ -847,28 +859,29 @@ export class WorkbenchStore {
             await this.deleteFile(filePath);
           } catch (error) {
             console.error(`Error deleting file ${filePath}:`, error);
+
             // Continue with other files instead of failing completely
             continue;
           }
         }
       }
-      
+
       // Reset selected file and current document
       this.setSelectedFile(undefined);
-      
+
       // Clear any unsaved files
       this.unsavedFiles.set(new Set<string>());
-      
+
       // Reset workspace loaded flag to allow reloading
       this.#workspaceLoaded = false;
-      
+
       // Force a refresh of the file tree UI by updating the files store atom
       this.#filesStore.files.set({});
-      
+
       // Update editor documents to reflect the cleared workspace
       const allFiles = this.files.get();
       this.setDocuments(allFiles, false);
-      
+
       console.log('Workspace cleared successfully');
     } catch (error) {
       console.error('Error clearing workspace:', error);
@@ -1141,19 +1154,19 @@ export class WorkbenchStore {
   async saveWorkspaceState() {
     try {
       const files = this.files.get();
-      
+
       // Convert files to a serializable format
       const serializedFiles: Record<string, { content: string; isBinary?: boolean }> = {};
-      
+
       for (const [path, dirent] of Object.entries(files)) {
         if (dirent?.type === 'file') {
           serializedFiles[path] = {
             content: dirent.content,
-            isBinary: dirent.isBinary
+            isBinary: dirent.isBinary,
           };
         }
       }
-      
+
       // Save to localStorage
       const workspaceData = {
         files: serializedFiles,
@@ -1161,7 +1174,7 @@ export class WorkbenchStore {
         unsavedFiles: Array.from(this.unsavedFiles.get()),
         timestamp: Date.now(),
       };
-      
+
       localStorage.setItem('mindvex-workspace-state', JSON.stringify(workspaceData));
       console.log('Workspace state saved to localStorage');
     } catch (error) {
@@ -1176,31 +1189,36 @@ export class WorkbenchStore {
         console.log('Workspace state already loaded, skipping');
         return;
       }
-      
+
       const workspaceDataStr = localStorage.getItem('mindvex-workspace-state');
+
       if (!workspaceDataStr) {
         console.log('No saved workspace state found');
+
         // Mark as loaded even if no state was found to prevent future attempts
         this.#workspaceLoaded = true;
+
         return;
       }
-      
+
       const workspaceData = JSON.parse(workspaceDataStr);
-      
-      // First, populate the workbench store with existing WebContainer files to avoid duplicates
-      // Wait for the file system to be ready and populate the store
+
+      /*
+       * First, populate the workbench store with existing WebContainer files to avoid duplicates
+       * Wait for the file system to be ready and populate the store
+       */
       const container = await webcontainer;
-      
+
       // Get current files from the WebContainer filesystem directly
       const webContainerFiles: Record<string, { content: string; isBinary?: boolean }> = {};
-      
+
       // Helper function to recursively walk the file system
       const walkDir = async (dirPath: string) => {
         const dirContents = await container.fs.readdir(dirPath, { withFileTypes: true });
-        
+
         for (const dirent of dirContents) {
           const fullPath = path.join(dirPath, dirent.name);
-          
+
           if (dirent.isDirectory()) {
             await walkDir(fullPath);
           } else if (dirent.isFile()) {
@@ -1213,61 +1231,74 @@ export class WorkbenchStore {
           }
         }
       };
-      
+
       // Walk from the WORK_DIR to get all existing files
       await walkDir(WORK_DIR);
-      
-      for (const [filePath, fileData] of Object.entries(workspaceData.files as Record<string, { content: string; isBinary?: boolean }>)) {
+
+      for (const [filePath, fileData] of Object.entries(
+        workspaceData.files as Record<string, { content: string; isBinary?: boolean }>,
+      )) {
         try {
-          // Normalize the file path to ensure it's within the WORK_DIR
-          // filePath from localStorage might already include WORK_DIR, so we check carefully
+          /*
+           * Normalize the file path to ensure it's within the WORK_DIR
+           * filePath from localStorage might already include WORK_DIR, so we check carefully
+           */
           let normalizedFilePath = filePath;
-          
+
           // If the path already starts with WORK_DIR, use it as is
           if (filePath.startsWith(WORK_DIR)) {
             normalizedFilePath = filePath;
+          } else if (filePath.startsWith('/home/project/')) {
+            // Handle legacy paths that might have the full /home/project prefix
+            normalizedFilePath = filePath;
           } else {
-            // If the path doesn't start with WORK_DIR, it's likely a relative path
-            // We need to construct the full path
+            /*
+             * If the path doesn't start with WORK_DIR, it's likely a relative path
+             * We need to construct the full path
+             */
             normalizedFilePath = path.join(WORK_DIR, filePath);
           }
-          
+
           // Check if file already exists in the WebContainer to avoid duplication
           if (webContainerFiles[normalizedFilePath]) {
             console.log(`File already exists in WebContainer, skipping: ${normalizedFilePath}`);
             continue;
           }
-          
+
           const dirPath = path.dirname(normalizedFilePath);
+
           if (dirPath !== '.' && dirPath !== '/') {
             await container.fs.mkdir(dirPath, { recursive: true });
           }
-          
+
           await container.fs.writeFile(normalizedFilePath, fileData.content);
-          
+
           // Add to workbench store without selecting the file
           await this.createFileWithoutSelecting(normalizedFilePath, fileData.content);
         } catch (error) {
           console.error(`Error restoring file ${filePath}:`, error);
         }
       }
-      
-      // Don't restore selected file to prevent auto-opening files on workspace load
-      // if (workspaceData.selectedFile) {
-      //   this.setSelectedFile(workspaceData.selectedFile);
-      // }
-      
+
+      /*
+       * Don't restore selected file to prevent auto-opening files on workspace load
+       * if (workspaceData.selectedFile) {
+       *   this.setSelectedFile(workspaceData.selectedFile);
+       * }
+       */
+
       // Restore unsaved files
       if (Array.isArray(workspaceData.unsavedFiles)) {
         this.unsavedFiles.set(new Set(workspaceData.unsavedFiles));
       }
-      
+
       // Mark workspace as loaded to prevent future attempts
       this.#workspaceLoaded = true;
-      
+
       console.log('Workspace state restored from localStorage');
     } catch (error) {
       console.error('Error loading workspace state:', error);
+
       // Still mark as loaded to prevent repeated failed attempts
       this.#workspaceLoaded = true;
     }

@@ -7,16 +7,17 @@ export function BaseCodeEditor() {
       <div className="flex h-full">
         <div className="w-64 bg-mindvex-elements-background-depth-2 border-r border-mindvex-elements-borderColor p-4">
           <div className="mb-6">
-            <Link to="/dashboard" className="flex items-center text-mindvex-elements-textPrimary hover:text-mindvex-elements-textSecondary transition-theme">
+            <Link
+              to="/dashboard"
+              className="flex items-center text-mindvex-elements-textPrimary hover:text-mindvex-elements-textSecondary transition-theme"
+            >
               <span className="i-ph:arrow-left mr-2"></span>
               Go to Dashboard
             </Link>
           </div>
           <h3 className="font-semibold text-mindvex-elements-textPrimary mb-3">Files</h3>
           <ul className="space-y-1">
-            <li className="text-mindvex-elements-textSecondary p-1">
-              No files available
-            </li>
+            <li className="text-mindvex-elements-textSecondary p-1">No files available</li>
           </ul>
         </div>
         <div className="flex-1 flex flex-col">

@@ -57,7 +57,7 @@ const SliderButton = memo(({ selected, children, setSelected }: SliderButtonProp
         'bg-transparent text-sm px-2.5 py-0.5 rounded-full relative',
         selected
           ? 'text-mindvex-elements-item-contentAccent'
-          : 'text-mindvex-elements-item-contentDefault hover:text-mindvex-elements-item-contentActive'
+          : 'text-mindvex-elements-item-contentDefault hover:text-mindvex-elements-item-contentActive',
       )}
     >
       <span className="relative z-10">{children}</span>

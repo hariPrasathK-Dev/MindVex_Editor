@@ -369,7 +369,7 @@ export const resetTabConfiguration = () => {
   };
 
   tabConfigurationStore.set(defaultConfig);
-  localStorage.setItem('mindvex_tab_configuration', JSON.stringify(defaultConfig))
+  localStorage.setItem('mindvex_tab_configuration', JSON.stringify(defaultConfig));
 };
 
 // First, let's define the SettingsStore interface

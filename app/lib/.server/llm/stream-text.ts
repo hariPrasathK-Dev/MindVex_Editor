@@ -46,7 +46,10 @@ function getCompletionTokenLimit(modelDetails: any): number {
 function sanitizeText(text: string): string {
   let sanitized = text.replace(/<div class=\"__mindvexThought__\">.*?<\/div>/s, '');
   sanitized = sanitized.replace(/<think>.*?<\/think>/s, '');
-  sanitized = sanitized.replace(/<mindvexAction type="file" filePath="package-lock\\.json">[\s\S]*?<\/mindvexAction>/g, '');
+  sanitized = sanitized.replace(
+    /<mindvexAction type="file" filePath="package-lock\\.json">[\s\S]*?<\/mindvexAction>/g,
+    '',
+  );
 
   return sanitized.trim();
 }
@@ -104,10 +107,14 @@ export async function streamText(props: {
     return newMessage;
   });
 
-  // Truncate messages if token count is likely to exceed limits
-  // Keep only the last few messages to stay within token limits
-  if (processedMessages.length > 10) { // Only keep the last 10 messages if there are more
+  /*
+   * Truncate messages if token count is likely to exceed limits
+   * Keep only the last few messages to stay within token limits
+   */
+  if (processedMessages.length > 10) {
+    // Only keep the last 10 messages if there are more
     const systemMessage = processedMessages[0]; // Preserve system message if it's the first
+
     if (systemMessage.role === 'system') {
       processedMessages = [systemMessage, ...processedMessages.slice(-9)]; // Keep system + last 9 messages
     } else {

@@ -15,7 +15,7 @@ const initialDashboardData = {
   totalLines: 0,
   totalCodeLines: 0,
   totalCommentLines: 0,
-  totalBlankLines: 0
+  totalBlankLines: 0,
 };
 
 export function BaseDashboard() {
@@ -31,13 +31,24 @@ export function BaseDashboard() {
           <h1 className="text-4xl font-bold text-mindvex-elements-textPrimary mb-3 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
             Project Dashboard
           </h1>
-          <p className="text-lg text-mindvex-elements-textSecondary">Real-time codebase intelligence and architecture visualization</p>
+          <p className="text-lg text-mindvex-elements-textSecondary">
+            Real-time codebase intelligence and architecture visualization
+          </p>
         </div>
         <div className="relative z-10 mt-6 flex items-center gap-3 text-mindvex-elements-textSecondary">
           <div className="flex items-center gap-2 px-4 py-2 bg-mindvex-elements-background-depth-1 rounded-full">
-            <svg className="animate-spin h-4 w-4 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg
+              className="animate-spin h-4 w-4 text-orange-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             <span className="text-sm font-medium">Initializing workspace analysis...</span>
           </div>
@@ -48,13 +59,38 @@ export function BaseDashboard() {
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Total Files', value: initialDashboardData.totalFiles, icon: '📄', color: 'from-blue-500 to-blue-600' },
-            { label: 'Code Modules', value: initialDashboardData.totalModules, icon: '📦', color: 'from-purple-500 to-purple-600' },
-            { label: 'Languages', value: initialDashboardData.languagesDetected, icon: '🔤', color: 'from-green-500 to-green-600' },
-            { label: 'Health Score', value: `${initialDashboardData.codeHealthScore}%`, icon: '💚', color: 'from-orange-500 to-orange-600' }
+            {
+              label: 'Total Files',
+              value: initialDashboardData.totalFiles,
+              icon: '📄',
+              color: 'from-blue-500 to-blue-600',
+            },
+            {
+              label: 'Code Modules',
+              value: initialDashboardData.totalModules,
+              icon: '📦',
+              color: 'from-purple-500 to-purple-600',
+            },
+            {
+              label: 'Languages',
+              value: initialDashboardData.languagesDetected,
+              icon: '🔤',
+              color: 'from-green-500 to-green-600',
+            },
+            {
+              label: 'Health Score',
+              value: `${initialDashboardData.codeHealthScore}%`,
+              icon: '💚',
+              color: 'from-orange-500 to-orange-600',
+            },
           ].map((metric, idx) => (
-            <div key={idx} className="group relative bg-mindvex-elements-background-depth-2 rounded-xl border border-mindvex-elements-borderColor overflow-hidden hover:shadow-lg transition-all duration-300">
-              <div className={`absolute inset-0 bg-gradient-to-br ${metric.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+            <div
+              key={idx}
+              className="group relative bg-mindvex-elements-background-depth-2 rounded-xl border border-mindvex-elements-borderColor overflow-hidden hover:shadow-lg transition-all duration-300"
+            >
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${metric.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}
+              ></div>
               <div className="relative p-6">
                 <div className="flex items-start justify-between mb-3">
                   <span className="text-3xl opacity-80">{metric.icon}</span>
@@ -66,7 +102,7 @@ export function BaseDashboard() {
             </div>
           ))}
         </div>
-        
+
         {/* Analysis Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-mindvex-elements-background-depth-2 rounded-xl border border-mindvex-elements-borderColor p-6">
@@ -83,7 +119,7 @@ export function BaseDashboard() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-mindvex-elements-background-depth-2 rounded-xl border border-mindvex-elements-borderColor p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white text-xl">
@@ -99,7 +135,7 @@ export function BaseDashboard() {
             </div>
           </div>
         </div>
-        
+
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-mindvex-elements-textPrimary mb-4 flex items-center gap-2">
@@ -110,11 +146,11 @@ export function BaseDashboard() {
             {[
               { to: '/architecture', icon: '🏗️', label: 'Architecture Diagram', desc: 'Visualize system structure' },
               { to: '/knowledge-graph', icon: '🕸️', label: 'Knowledge Graph', desc: 'Explore code relationships' },
-              { to: '/editor', icon: '💻', label: 'Code Editor', desc: 'Edit and manage files' }
+              { to: '/editor', icon: '💻', label: 'Code Editor', desc: 'Edit and manage files' },
             ].map((action, idx) => (
-              <Link 
+              <Link
                 key={idx}
-                to={action.to} 
+                to={action.to}
                 className="group relative bg-mindvex-elements-background-depth-2 hover:bg-mindvex-elements-background-depth-3 p-6 rounded-xl border border-mindvex-elements-borderColor transition-all duration-300 hover:shadow-lg hover:scale-105 hover:border-orange-500"
               >
                 <div className="flex items-start gap-4">
@@ -125,7 +161,12 @@ export function BaseDashboard() {
                     </h3>
                     <p className="text-sm text-mindvex-elements-textSecondary">{action.desc}</p>
                   </div>
-                  <svg className="w-5 h-5 text-mindvex-elements-textSecondary group-hover:text-orange-500 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg
+                    className="w-5 h-5 text-mindvex-elements-textSecondary group-hover:text-orange-500 group-hover:translate-x-1 transition-all"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -133,7 +174,7 @@ export function BaseDashboard() {
             ))}
           </div>
         </div>
-        
+
         {/* Workspace Actions */}
         <div>
           <h2 className="text-xl font-bold text-mindvex-elements-textPrimary mb-4 flex items-center gap-2">
@@ -143,11 +184,11 @@ export function BaseDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               { to: '/chat', icon: '💬', label: 'Chat with Code', desc: 'AI-powered code assistance' },
-              { to: '/editor', icon: '🔧', label: 'Go to Workspace', desc: 'Access full development environment' }
+              { to: '/editor', icon: '🔧', label: 'Go to Workspace', desc: 'Access full development environment' },
             ].map((tool, idx) => (
-              <Link 
+              <Link
                 key={idx}
-                to={tool.to} 
+                to={tool.to}
                 className="group flex items-center gap-4 bg-mindvex-elements-background-depth-2 hover:bg-mindvex-elements-background-depth-3 p-5 rounded-xl border border-mindvex-elements-borderColor transition-all duration-300 hover:shadow-lg hover:border-orange-500"
               >
                 <div className="text-3xl group-hover:scale-110 transition-transform duration-300">{tool.icon}</div>
@@ -157,7 +198,12 @@ export function BaseDashboard() {
                   </h3>
                   <p className="text-sm text-mindvex-elements-textSecondary">{tool.desc}</p>
                 </div>
-                <svg className="w-5 h-5 text-mindvex-elements-textSecondary group-hover:text-orange-500 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="w-5 h-5 text-mindvex-elements-textSecondary group-hover:text-orange-500 group-hover:translate-x-1 transition-all"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>

@@ -146,16 +146,17 @@ export const FileTree = memo(
 
     const handleCreateFolder = async () => {
       const folderName = prompt('Enter folder name:');
+
       if (folderName) {
         try {
           // Use root folder or create in the root if no specific root is set
           const targetPath = rootFolder && rootFolder !== '/' ? rootFolder : '/';
           const newFolderPath = path.join(targetPath, folderName);
           const success = await workbenchStore.createFolder(newFolderPath);
-          
+
           if (success) {
             toast.success(`Folder '${folderName}' created successfully`);
-            
+
             // Update editor documents to reflect the newly created folder
             const allFiles = workbenchStore.files.get();
             workbenchStore.setDocuments(allFiles, false);
@@ -173,26 +174,28 @@ export const FileTree = memo(
       const input = document.createElement('input');
       input.type = 'file';
       input.multiple = true; // Allow multiple file selection
-      
+
       input.onchange = async (e) => {
         const files = Array.from((e.target as HTMLInputElement).files || []);
+
         if (files.length > 0) {
           try {
             for (const file of files) {
               const content = await file.text();
+
               // Use root folder or create in the root if no specific root is set
               const targetPath = rootFolder && rootFolder !== '/' ? rootFolder : '/';
               const filePath = path.join(targetPath, file.name);
-              
+
               const success = await workbenchStore.createFile(filePath, content);
-              
+
               if (success) {
                 toast.success(`File '${file.name}' imported successfully`);
               } else {
                 toast.error(`Failed to import file '${file.name}'`);
               }
             }
-            
+
             // Update editor documents to reflect all newly created files
             const allFiles = workbenchStore.files.get();
             workbenchStore.setDocuments(allFiles, false);
@@ -202,7 +205,7 @@ export const FileTree = memo(
           }
         }
       };
-      
+
       input.click();
     };
 
@@ -211,13 +214,15 @@ export const FileTree = memo(
       input.type = 'file';
       (input as any).webkitdirectory = true;
       input.multiple = true;
-      
+
       input.onchange = async (e) => {
         const files = Array.from((e.target as HTMLInputElement).files || []);
+
         if (files.length > 0) {
           try {
             // Use the importFilesToWorkbench function that already handles folder import
             const success = await importFilesToWorkbench(files);
+
             if (success) {
               toast.success('Folder imported successfully');
             }
@@ -227,7 +232,7 @@ export const FileTree = memo(
           }
         }
       };
-      
+
       input.click();
     };
 
@@ -291,26 +296,26 @@ export const FileTree = memo(
                 </div>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content 
+                <DropdownMenu.Content
                   className="min-w-[200px] bg-mindvex-elements-background-depth-1 border border-mindvex-elements-borderColor rounded-md shadow-lg z-context-menu p-1"
                   sideOffset={5}
                   align="start"
                 >
-                  <DropdownMenu.Item 
+                  <DropdownMenu.Item
                     className="flex items-center gap-2 px-3 py-2 text-sm text-mindvex-elements-textPrimary cursor-pointer hover:bg-mindvex-elements-background-depth-2 rounded-md mb-1"
                     onSelect={handleCreateFolder}
                   >
                     <span className="i-ph:folder-plus" />
                     Create Folder
                   </DropdownMenu.Item>
-                  <DropdownMenu.Item 
+                  <DropdownMenu.Item
                     className="flex items-center gap-2 px-3 py-2 text-sm text-mindvex-elements-textPrimary cursor-pointer hover:bg-mindvex-elements-background-depth-2 rounded-md mb-1"
                     onSelect={handleOpenFile}
                   >
                     <span className="i-ph:file-plus" />
                     Open File
                   </DropdownMenu.Item>
-                  <DropdownMenu.Item 
+                  <DropdownMenu.Item
                     className="flex items-center gap-2 px-3 py-2 text-sm text-mindvex-elements-textPrimary cursor-pointer hover:bg-mindvex-elements-background-depth-2 rounded-md"
                     onSelect={handleOpenFolder}
                   >
@@ -485,7 +490,7 @@ function FileContextMenu({
           }
         }
       }
-      
+
       // Update editor documents to reflect all newly created files
       const allFiles = workbenchStore.files.get();
       workbenchStore.setDocuments(allFiles, false);
@@ -501,7 +506,7 @@ function FileContextMenu({
 
     if (success) {
       toast.success('File created successfully');
-      
+
       // Update editor documents to reflect the newly created file
       const allFiles = workbenchStore.files.get();
       workbenchStore.setDocuments(allFiles, false);
@@ -518,7 +523,7 @@ function FileContextMenu({
 
     if (success) {
       toast.success('Folder created successfully');
-      
+
       // Update editor documents to reflect the newly created folder
       const allFiles = workbenchStore.files.get();
       workbenchStore.setDocuments(allFiles, false);
@@ -545,7 +550,7 @@ function FileContextMenu({
 
       if (success) {
         toast.success(`${isFolder ? 'Folder' : 'File'} deleted successfully`);
-        
+
         // Update editor documents to reflect the deletion
         const allFiles = workbenchStore.files.get();
         workbenchStore.setDocuments(allFiles, false);
@@ -940,7 +945,7 @@ function buildFileList(
   for (const [filePath, dirent] of Object.entries(files)) {
     // Ensure filePath starts with '/' for consistency
     const normalizedFilePath = filePath.startsWith('/') ? filePath : `/${filePath}`;
-    
+
     const segments = normalizedFilePath.split('/').filter((segment) => segment);
     const fileName = segments.at(-1);
 

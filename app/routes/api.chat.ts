@@ -48,24 +48,36 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
     },
   });
 
-  const { messages, files, promptId, contextOptimization, supabase, chatMode, designScheme, maxLLMSteps, chatContextMode, selectedContextFiles } =
-    await request.json<{ chatContextMode?: 'active-file' | 'selected-files' | 'no-context'; selectedContextFiles?: string[]; 
-      messages: Messages;
-      files: any;
-      promptId?: string;
-      contextOptimization: boolean;
-      chatMode: 'discuss' | 'build';
-      designScheme?: DesignScheme;
-      supabase?: {
-        isConnected: boolean;
-        hasSelectedProject: boolean;
-        credentials?: {
-          anonKey?: string;
-          supabaseUrl?: string;
-        };
+  const {
+    messages,
+    files,
+    promptId,
+    contextOptimization,
+    supabase,
+    chatMode,
+    designScheme,
+    maxLLMSteps,
+    chatContextMode,
+    selectedContextFiles,
+  } = await request.json<{
+    chatContextMode?: 'active-file' | 'selected-files' | 'no-context';
+    selectedContextFiles?: string[];
+    messages: Messages;
+    files: any;
+    promptId?: string;
+    contextOptimization: boolean;
+    chatMode: 'discuss' | 'build';
+    designScheme?: DesignScheme;
+    supabase?: {
+      isConnected: boolean;
+      hasSelectedProject: boolean;
+      credentials?: {
+        anonKey?: string;
+        supabaseUrl?: string;
       };
-      maxLLMSteps: number;
-    }>();
+    };
+    maxLLMSteps: number;
+  }>();
 
   const cookieHeader = request.headers.get('Cookie');
   const apiKeys = JSON.parse(parseCookies(cookieHeader || '').apiKeys || '{}');
@@ -113,53 +125,57 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
           // Selected files mode: only include the user-selected files
           logger.debug('Selected files mode: filtering to user-selected files');
           filteredFiles = {};
-          
+
           for (const filePath of selectedContextFiles) {
             if (files[filePath]) {
               filteredFiles[filePath] = files[filePath];
             }
           }
-          
+
           logger.debug(`Selected files mode - files in context: ${JSON.stringify(Object.keys(filteredFiles))}`);
-          
+
           dataStream.writeMessageAnnotation({
             type: 'codeContext',
             files: Object.keys(filteredFiles).map((key) => {
               let path = key;
-              
+
               if (path.startsWith(WORK_DIR)) {
                 path = path.replace(WORK_DIR, '');
               }
-              
+
               return path;
             }),
           } as ContextAnnotation);
         } else if (chatContextMode === 'active-file') {
-          // Active file mode: use the files that were specifically provided by the frontend
-          // The frontend should have already filtered to only include the active file
+          /*
+           * Active file mode: use the files that were specifically provided by the frontend
+           * The frontend should have already filtered to only include the active file
+           */
           logger.debug('Active file mode: using files provided by frontend');
           logger.debug(`Files provided in active file mode: ${JSON.stringify(files ? Object.keys(files) : [])}`);
-          
+
           // Use all files that were provided (should be just the active file)
           filteredFiles = files ? { ...(files as any) } : {};
-          
+
           if (Object.keys(filteredFiles).length > 0) {
             dataStream.writeMessageAnnotation({
               type: 'codeContext',
               files: Object.keys(filteredFiles).map((key) => {
                 let path = key;
-                
+
                 if (path.startsWith(WORK_DIR)) {
                   path = path.replace(WORK_DIR, '');
                 }
-                
+
                 return path;
               }),
             } as ContextAnnotation);
           }
-          
-          // Skip the context optimization logic for active file mode
-          // Just proceed with the files provided by the frontend
+
+          /*
+           * Skip the context optimization logic for active file mode
+           * Just proceed with the files provided by the frontend
+           */
         } else if (filePaths.length > 0 && contextOptimization) {
           // Default behavior when no specific mode is set
           logger.debug('Generating Chat Summary');

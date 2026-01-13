@@ -120,23 +120,31 @@ export async function selectContext(props: {
 
   // Check if the user's query is simple (e.g., just saying hi) to avoid unnecessary context expansion
   const userQuestion = extractTextContent(lastUserMessage);
-  const isSimpleQuery = userQuestion.trim().toLowerCase().match(/^(hi|hello|hola|hey|good morning|good afternoon|good evening|good day|greetings|bonjour|ciao|salut|hallo|ola|namaste|bye|goodbye|adios|au revoir|sayonara|see you|talk to you later)$/);
-  
+  const isSimpleQuery = userQuestion
+    .trim()
+    .toLowerCase()
+    .match(
+      /^(hi|hello|hola|hey|good morning|good afternoon|good evening|good day|greetings|bonjour|ciao|salut|hallo|ola|namaste|bye|goodbye|adios|au revoir|sayonara|see you|talk to you later)$/,
+    );
+
   // If it's a simple query, don't select additional files - just return the existing context files
   if (isSimpleQuery) {
     logger.info('Simple query detected, returning existing context files without selection');
+
     const totalFiles = Object.keys(contextFiles).length;
-    
+
     if (totalFiles == 0) {
       // For simple queries with no context, just return empty
       return {};
     }
-    
+
     return contextFiles;
   }
-  
-  // Only proceed with context selection for more complex queries
-  // select files from the list of code file from the project that might be useful for the current request from the user
+
+  /*
+   * Only proceed with context selection for more complex queries
+   * select files from the list of code file from the project that might be useful for the current request from the user
+   */
   const resp = await generateText({
     system: `
         You are a software engineer assistant. You are helping a user with their codebase. You have access to the following files:
@@ -207,10 +215,12 @@ export async function selectContext(props: {
 
   if (!updateContextBuffer) {
     logger.warn('AI did not return properly formatted context selection, using preserved context files');
+
     // If the AI didn't return a properly formatted response, just return the preserved context files
     if (Object.keys(contextFiles).length > 0) {
       return contextFiles;
     }
+
     // Otherwise return an empty context
     return {};
   }
@@ -253,25 +263,31 @@ export async function selectContext(props: {
     onFinish(resp);
   }
 
-  // Preserve user-provided context files (from Add Context button) in addition to AI-selected files
-  // This ensures that when users explicitly select files, those files are always included
+  /*
+   * Preserve user-provided context files (from Add Context button) in addition to AI-selected files
+   * This ensures that when users explicitly select files, those files are always included
+   */
   const preservedContextFiles = { ...contextFiles }; // Copy existing context files
-  
+
   // Add user-provided context files that weren't selected by AI (to preserve user intent)
-  Object.keys(preservedContextFiles).forEach(path => {
+  Object.keys(preservedContextFiles).forEach((path) => {
     if (!filteredFiles[path]) {
-      // If the user-provided file wasn't selected by AI, add it anyway
-      // Need to get the full path for the files object
+      /*
+       * If the user-provided file wasn't selected by AI, add it anyway
+       * Need to get the full path for the files object
+       */
       let fullPath = path;
+
       if (!path.startsWith('/home/project/')) {
         fullPath = `/home/project/${path}`;
       }
+
       if (files[fullPath]) {
         filteredFiles[path] = files[fullPath];
       }
     }
   });
-  
+
   const totalFiles = Object.keys(filteredFiles).length;
   logger.info(`Total files: ${totalFiles}`);
 
@@ -280,10 +296,13 @@ export async function selectContext(props: {
     if (Object.keys(preservedContextFiles).length > 0) {
       return preservedContextFiles;
     }
-    
-    // For simple queries or when no files are relevant, return empty context instead of failing
-    // This allows the AI to respond based on general knowledge without code context
+
+    /*
+     * For simple queries or when no files are relevant, return empty context instead of failing
+     * This allows the AI to respond based on general knowledge without code context
+     */
     logger.warn('No files selected for context, returning empty context');
+
     return {};
   }
 

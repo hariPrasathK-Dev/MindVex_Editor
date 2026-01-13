@@ -124,22 +124,22 @@ const quickActionsSliderOptions: SliderOptions<WorkbenchViewType> = {
 };
 
 // Options to always show Code, Diff, and Dashboard tabs
-  const fourTabSliderOptions: SliderOptions<WorkbenchViewType> = {
-    left: {
-      value: 'code',
-      text: 'Code',
-    },
-    middle: {
-      value: 'diff',
-      text: 'Diff',
-    },
-    right: {
-      value: 'dashboard',
-      text: 'Dashboard',
-    },
-  };
+const fourTabSliderOptions: SliderOptions<WorkbenchViewType> = {
+  left: {
+    value: 'code',
+    text: 'Code',
+  },
+  middle: {
+    value: 'diff',
+    text: 'Diff',
+  },
+  right: {
+    value: 'dashboard',
+    text: 'Dashboard',
+  },
+};
 
-  const workbenchVariants = {
+const workbenchVariants = {
   closed: {
     width: 0,
     transition: {
@@ -491,12 +491,14 @@ export const Workbench = memo(
       workbenchStore.currentView.set(view);
     };
 
-    // Removed automatic switching to preview - now user can choose Dashboard or Preview manually
-    // useEffect(() => {
-    //   if (hasPreview) {
-    //     setSelectedView('preview');
-    //   }
-    // }, [hasPreview]);
+    /*
+     * Removed automatic switching to preview - now user can choose Dashboard or Preview manually
+     * useEffect(() => {
+     *   if (hasPreview) {
+     *     setSelectedView('preview');
+     *   }
+     * }, [hasPreview]);
+     */
 
     useEffect(() => {
       workbenchStore.setDocuments(files, false);
@@ -582,7 +584,25 @@ export const Workbench = memo(
                       }
                     }}
                   />
-                  <Slider selected={selectedView} options={selectedView === 'preview' ? previewSlider : selectedView === 'quick-actions' ? quickActionsDashboardSlider : selectedView === 'arch-graph' ? architectureGraphSlider : selectedView === 'change-impact' ? changeImpactSlider : selectedView === 'cycle-detection' ? cycleDetectionSlider : selectedView === 'dashboard' ? dashboardSliderOptions : extendedSliderOptions} setSelected={setSelectedView} />
+                  <Slider
+                    selected={selectedView}
+                    options={
+                      selectedView === 'preview'
+                        ? previewSlider
+                        : selectedView === 'quick-actions'
+                          ? quickActionsDashboardSlider
+                          : selectedView === 'arch-graph'
+                            ? architectureGraphSlider
+                            : selectedView === 'change-impact'
+                              ? changeImpactSlider
+                              : selectedView === 'cycle-detection'
+                                ? cycleDetectionSlider
+                                : selectedView === 'dashboard'
+                                  ? dashboardSliderOptions
+                                  : extendedSliderOptions
+                    }
+                    setSelected={setSelectedView}
+                  />
                   <div className="ml-auto" />
                   {selectedView === 'code' && (
                     <div className="flex overflow-y-auto">
@@ -643,7 +663,7 @@ export const Workbench = memo(
                           Toggle Terminal
                         </button>
                       </div>
-                      
+
                       {/* Toggle Chat Button */}
                       <div className="flex border border-mindvex-elements-borderColor rounded-md overflow-hidden ml-1">
                         <button
@@ -672,7 +692,10 @@ export const Workbench = memo(
                   />
                 </div>
                 <div className="relative flex-1 overflow-hidden">
-                  <View initial={{ x: selectedView === 'code' ? '0%' : '100%' }} animate={{ x: selectedView === 'code' ? '0%' : '100%' }}>
+                  <View
+                    initial={{ x: selectedView === 'code' ? '0%' : '100%' }}
+                    animate={{ x: selectedView === 'code' ? '0%' : '100%' }}
+                  >
                     <EditorPanel
                       editorDocument={currentDocument}
                       isStreaming={isStreaming}
@@ -692,22 +715,40 @@ export const Workbench = memo(
                   >
                     <DiffView fileHistory={fileHistory} setFileHistory={setFileHistory} />
                   </View>
-                  <View initial={{ x: selectedView === 'preview' ? '0%' : '100%' }} animate={{ x: selectedView === 'preview' ? '0%' : '100%' }}>
+                  <View
+                    initial={{ x: selectedView === 'preview' ? '0%' : '100%' }}
+                    animate={{ x: selectedView === 'preview' ? '0%' : '100%' }}
+                  >
                     <Preview setSelectedElement={setSelectedElement} />
                   </View>
-                  <View initial={{ x: selectedView === 'dashboard' ? '0%' : '100%' }} animate={{ x: selectedView === 'dashboard' ? '0%' : '100%' }}>
+                  <View
+                    initial={{ x: selectedView === 'dashboard' ? '0%' : '100%' }}
+                    animate={{ x: selectedView === 'dashboard' ? '0%' : '100%' }}
+                  >
                     <Dashboard />
                   </View>
-                  <View initial={{ x: selectedView === 'quick-actions' ? '0%' : '100%' }} animate={{ x: selectedView === 'quick-actions' ? '0%' : '100%' }}>
+                  <View
+                    initial={{ x: selectedView === 'quick-actions' ? '0%' : '100%' }}
+                    animate={{ x: selectedView === 'quick-actions' ? '0%' : '100%' }}
+                  >
                     <QuickActions />
                   </View>
-                  <View initial={{ x: selectedView === 'arch-graph' ? '0%' : '100%' }} animate={{ x: selectedView === 'arch-graph' ? '0%' : '100%' }}>
+                  <View
+                    initial={{ x: selectedView === 'arch-graph' ? '0%' : '100%' }}
+                    animate={{ x: selectedView === 'arch-graph' ? '0%' : '100%' }}
+                  >
                     <ArchitectureGraph />
                   </View>
-                  <View initial={{ x: selectedView === 'change-impact' ? '0%' : '100%' }} animate={{ x: selectedView === 'change-impact' ? '0%' : '100%' }}>
+                  <View
+                    initial={{ x: selectedView === 'change-impact' ? '0%' : '100%' }}
+                    animate={{ x: selectedView === 'change-impact' ? '0%' : '100%' }}
+                  >
                     <ChangeImpactAnalysis />
                   </View>
-                  <View initial={{ x: selectedView === 'cycle-detection' ? '0%' : '100%' }} animate={{ x: selectedView === 'cycle-detection' ? '0%' : '100%' }}>
+                  <View
+                    initial={{ x: selectedView === 'cycle-detection' ? '0%' : '100%' }}
+                    animate={{ x: selectedView === 'cycle-detection' ? '0%' : '100%' }}
+                  >
                     <CycleDetection />
                   </View>
                 </div>

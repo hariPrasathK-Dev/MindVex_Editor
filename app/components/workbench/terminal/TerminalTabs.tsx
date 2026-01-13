@@ -162,7 +162,8 @@ export const TerminalTabs = memo(() => {
                         className={classNames(
                           'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
                           {
-                            'bg-mindvex-elements-terminals-buttonBackground text-mindvex-elements-textPrimary': isActive,
+                            'bg-mindvex-elements-terminals-buttonBackground text-mindvex-elements-textPrimary':
+                              isActive,
                             'bg-mindvex-elements-background-depth-2 text-mindvex-elements-textSecondary hover:bg-mindvex-elements-terminals-buttonBackground':
                               !isActive,
                           },
@@ -218,7 +219,7 @@ export const TerminalTabs = memo(() => {
           {Array.from({ length: terminalCount + 1 }, (_, index) => {
             const isActive = activeTerminal === index;
 
-            logger.debug(`Starting MindVex terminal [${index}]`)
+            logger.debug(`Starting MindVex terminal [${index}]`);
 
             if (index == 0) {
               return (

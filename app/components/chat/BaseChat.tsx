@@ -25,7 +25,6 @@ import ChatAlert from './ChatAlert';
 import type { ModelInfo } from '~/lib/modules/llm/types';
 import ProgressCompilation from './ProgressCompilation';
 import type { ProgressAnnotation } from '~/types/context';
-import { SupabaseChatAlert } from '~/components/chat/SupabaseAlert';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { useStore } from '@nanostores/react';
 import { StickToBottom, useStickToBottomContext } from '~/lib/hooks';
@@ -155,7 +154,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const expoUrl = useStore(expoUrlAtom);
     const [qrModalOpen, setQrModalOpen] = useState(false);
     const [contextSelectionMode, setContextSelectionMode] = useState<'auto' | 'manual'>('auto'); // 'auto' for AI selection, 'manual' for user selection
-    const [chatContextMode, setChatContextMode] = useState<'active-file' | 'selected-files' | 'no-context'>('active-file');
+    const [chatContextMode, setChatContextMode] = useState<'active-file' | 'selected-files' | 'no-context'>(
+      'active-file',
+    );
     const [selectedContextFiles, setSelectedContextFiles] = useState<string[]>([]);
 
     useEffect(() => {
@@ -381,7 +382,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               <StickToBottom.Content className="flex flex-col gap-4 relative ">
                 <ClientOnly>
                   {() => {
-                    return (chatStarted || (messages && messages.length > 0)) ? (
+                    return chatStarted || (messages && messages.length > 0) ? (
                       <Messages
                         key={`messages-${messages?.length || 0}-${isStreaming ? 'streaming' : 'not-streaming'}`}
                         className="flex flex-col w-full flex-1 max-w-chat pb-4 mx-auto z-1"
@@ -410,16 +411,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       alert={deployAlert}
                       clearAlert={() => clearDeployAlert?.()}
                       postMessage={(message: string | undefined) => {
-                        sendMessage?.({} as any, message);
-                        clearSupabaseAlert?.();
-                      }}
-                    />
-                  )}
-                  {supabaseAlert && (
-                    <SupabaseChatAlert
-                      alert={supabaseAlert}
-                      clearAlert={() => clearSupabaseAlert?.()}
-                      postMessage={(message) => {
                         sendMessage?.({} as any, message);
                         clearSupabaseAlert?.();
                       }}
@@ -500,7 +491,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           {!inRightPanel && (
             <ClientOnly>
               {() => (
-                <Workbench chatStarted={chatStarted} isStreaming={isStreaming} setSelectedElement={setSelectedElement} />
+                <Workbench
+                  chatStarted={chatStarted}
+                  isStreaming={isStreaming}
+                  setSelectedElement={setSelectedElement}
+                />
               )}
             </ClientOnly>
           )}

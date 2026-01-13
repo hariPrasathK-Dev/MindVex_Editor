@@ -5,7 +5,10 @@ export function BaseImport() {
   return (
     <div className="flex flex-col h-full w-full p-6">
       <div className="mb-6">
-        <Link to="/" className="flex items-center text-mindvex-elements-textPrimary hover:text-mindvex-elements-textSecondary transition-theme">
+        <Link
+          to="/"
+          className="flex items-center text-mindvex-elements-textPrimary hover:text-mindvex-elements-textSecondary transition-theme"
+        >
           <span className="i-ph:arrow-left mr-2"></span>
           Go to Home
         </Link>

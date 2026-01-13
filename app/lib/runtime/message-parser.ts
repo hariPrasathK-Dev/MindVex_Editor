@@ -1,4 +1,11 @@
-import type { ActionType, MindvexAction, MindvexActionData, FileAction, ShellAction, SupabaseAction } from '~/types/actions';
+import type {
+  ActionType,
+  MindvexAction,
+  MindvexActionData,
+  FileAction,
+  ShellAction,
+  SupabaseAction,
+} from '~/types/actions';
 import type { MindvexArtifactData } from '~/types/artifact';
 import { createScopedLogger } from '~/utils/logger';
 import { unreachable } from '~/utils/unreachable';
@@ -21,7 +28,7 @@ export interface ActionCallbackData {
   artifactId: string;
   messageId: string;
   actionId: string;
-  action: MindvexAction
+  action: MindvexAction;
 }
 
 export type ArtifactCallback = (data: ArtifactCallbackData) => void;
@@ -53,7 +60,7 @@ interface MessageState {
   insideAction: boolean;
   artifactCounter: number;
   currentArtifact?: MindvexArtifactData;
-  currentAction: MindvexActionData
+  currentAction: MindvexActionData;
   actionId: number;
 }
 
@@ -171,7 +178,7 @@ export class StreamingMessageParser {
                */
               actionId: String(state.actionId - 1),
 
-              action: currentAction as MindvexAction
+              action: currentAction as MindvexAction,
             });
 
             state.insideAction = false;
@@ -217,7 +224,7 @@ export class StreamingMessageParser {
                 artifactId: currentArtifact.id,
                 messageId,
                 actionId: String(state.actionId++),
-                action: state.currentAction as MindvexAction
+                action: state.currentAction as MindvexAction,
               });
 
               i = actionEndIndex + 1;

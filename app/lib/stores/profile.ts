@@ -23,6 +23,6 @@ export const updateProfile = (updates: Partial<Profile>) => {
 
   // Persist to localStorage
   if (typeof window !== 'undefined') {
-    localStorage.setItem('mindvex_profile', JSON.stringify(profileStore.get()))
+    localStorage.setItem('mindvex_profile', JSON.stringify(profileStore.get()));
   }
 };

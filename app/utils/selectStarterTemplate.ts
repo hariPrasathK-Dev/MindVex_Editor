@@ -161,10 +161,10 @@ export async function getTemplates(templateName: string, title?: string) {
   }
 
   // exclude    .mindvex
-  filteredFiles = filteredFiles.filter((x) => x.path.startsWith('.mindvex') == false)
+  filteredFiles = filteredFiles.filter((x) => x.path.startsWith('.mindvex') == false);
 
   // check for ignore file in .mindvex folder
-  const templateIgnoreFile = files.find((x) => x.path.startsWith('.mindvex') && x.name == 'ignore')
+  const templateIgnoreFile = files.find((x) => x.path.startsWith('.mindvex') && x.name == 'ignore');
 
   const filesToImport = {
     files: filteredFiles,
@@ -197,7 +197,7 @@ ${file.content}
 </mindvexArtifact>
 `;
   let userMessage = ``;
-  const templatePromptFile = files.filter((x) => x.path.startsWith('.mindvex')).find((x) => x.name == 'prompt')
+  const templatePromptFile = files.filter((x) => x.path.startsWith('.mindvex')).find((x) => x.name == 'prompt');
 
   if (templatePromptFile) {
     userMessage = `

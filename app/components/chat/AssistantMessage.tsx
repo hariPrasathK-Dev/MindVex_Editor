@@ -116,8 +116,8 @@ export const AssistantMessage = memo(
                   {codeContext.map((x) => {
                     const normalized = normalizedFilePath(x);
                     return (
-                      <span 
-                        key={normalized} 
+                      <span
+                        key={normalized}
                         className="text-xs px-2 py-1 rounded bg-mindvex-elements-background-depth-1 text-mindvex-elements-textSecondary border border-mindvex-elements-borderColor hover:bg-mindvex-elements-item-backgroundAccent hover:text-mindvex-elements-item-contentAccent cursor-pointer"
                         onClick={(e) => {
                           e.preventDefault();

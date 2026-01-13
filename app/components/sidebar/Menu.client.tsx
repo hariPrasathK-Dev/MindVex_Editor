@@ -12,7 +12,7 @@ import { binDates } from './date-binning';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
-import { profileStore } from '~/lib/stores/profile';
+import { authStore, clearAuth } from '~/lib/stores/authStore';
 import { RepositoryHistory } from './RepositoryHistory';
 import { ChatHistory } from './ChatHistory';
 import { repositoryHistoryStore } from '~/lib/stores/repositoryHistory';
@@ -75,7 +75,7 @@ export const Menu = () => {
   const [open, setOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const profile = useStore(profileStore);
+  const auth = useStore(authStore);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
@@ -171,33 +171,34 @@ export const Menu = () => {
         console.log('Bulk delete skipped: No items to delete.');
         return;
       }
-  
+
       console.log(`Starting bulk delete for ${itemsToDeleteIds.length} items`, itemsToDeleteIds);
-  
+
       let deletedCount = 0;
       const errors: string[] = [];
       const currentChatId = chatId.get();
       let shouldNavigate = false;
-  
+
       // Process deletions sequentially - determine if it's a chat or repository item
       for (const id of itemsToDeleteIds) {
         try {
           // Find the item in the list to determine its type
-          const item = list.find(item => item.id === id);
-            
+          const item = list.find((item) => item.id === id);
+
           if (item && item.urlId) {
             // This is a chat history item
             if (!db) {
               throw new Error('Database not available');
             }
+
             await deleteChat(id);
           } else {
             // This is a repository item
             repositoryHistoryStore.removeRepository(id);
           }
-            
+
           deletedCount++;
-            
+
           if (id === currentChatId) {
             shouldNavigate = true;
           }
@@ -206,7 +207,7 @@ export const Menu = () => {
           errors.push(id);
         }
       }
-  
+
       // Show appropriate toast message
       if (errors.length === 0) {
         toast.success(`${deletedCount} item${deletedCount === 1 ? '' : 's'} deleted successfully`);
@@ -215,14 +216,14 @@ export const Menu = () => {
           autoClose: 5000,
         });
       }
-  
+
       // Reload the list after all deletions
       await loadEntries();
-  
+
       // Clear selection state
       setSelectedItems([]);
       setSelectionMode(false);
-  
+
       // Navigate if needed
       if (shouldNavigate) {
         console.log('Navigating away from deleted chat');
@@ -372,20 +373,10 @@ export const Menu = () => {
           <div className="flex items-center gap-3">
             <HelpButton onClick={() => window.open('https://mindvex.ai/', '_blank')} />
             <span className="font-medium text-sm text-mindvex-elements-textPrimary truncate">
-              {profile?.username || 'Guest User'}
+              {auth.user?.fullName || auth.user?.email || 'Guest User'}
             </span>
             <div className="flex items-center justify-center w-[32px] h-[32px] overflow-hidden bg-mindvex-elements-bg-depth-1 text-mindvex-elements-textSecondary rounded-full shrink-0">
-              {profile?.avatar ? (
-                <img
-                  src={profile.avatar}
-                  alt={profile?.username || 'User'}
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                  decoding="sync"
-                />
-              ) : (
-                <div className="i-ph:user-fill text-lg" />
-              )}
+              <div className="i-ph:user-fill text-lg" />
             </div>
           </div>
         </div>
@@ -431,16 +422,25 @@ export const Menu = () => {
                   const input = document.createElement('input');
                   input.type = 'file';
                   (input as any).webkitdirectory = true;
+
                   input.onchange = async (e) => {
                     const files = Array.from((e.target as HTMLInputElement).files || []);
+
                     if (files.length > 0) {
                       try {
                         const folderName = files[0]?.webkitRelativePath.split('/')[0] || 'Unknown Folder';
+
                         // Show options to add to existing workspace or create new workspace
-                        const addToExisting = window.confirm(`Do you want to add this folder to the existing workspace?\n\nClick 'OK' to add to existing workspace, 'Cancel' to create a new workspace (replacing current content)`);
-                        
+                        const addToExisting = window.confirm(
+                          `Do you want to add this folder to the existing workspace?\n\nClick 'OK' to add to existing workspace, 'Cancel' to create a new workspace (replacing current content)`,
+                        );
+
                         await importFolderToWorkbench(files, addToExisting);
-                        repositoryHistoryStore.addRepository(`folder://${folderName}`, folderName, `Imported folder: ${folderName}`);
+                        repositoryHistoryStore.addRepository(
+                          `folder://${folderName}`,
+                          folderName,
+                          `Imported folder: ${folderName}`,
+                        );
                         toast.success(`Folder ${folderName} imported and added to history`);
                       } catch (error) {
                         console.error('Failed to import folder to workbench:', error);
@@ -459,16 +459,18 @@ export const Menu = () => {
               <button
                 onClick={async () => {
                   const folderName = prompt('Enter folder name:');
+
                   if (folderName) {
                     try {
                       // Ensure the folder is created under the project directory
                       const fullFolderPath = `${WORK_DIR}/${folderName}`;
                       const result = await workbenchStore.createFolder(fullFolderPath);
+
                       if (result) {
                         // Update editor documents to reflect the newly created folder
                         const allFiles = workbenchStore.files.get();
                         workbenchStore.setDocuments(allFiles, false);
-                        
+
                         toast.success(`Folder '${folderName}' created`);
                       } else {
                         toast.error(`Failed to create folder '${folderName}'`);
@@ -490,8 +492,10 @@ export const Menu = () => {
                   const input = document.createElement('input');
                   input.type = 'file';
                   input.multiple = true;
+
                   input.onchange = async (e) => {
                     const files = Array.from((e.target as HTMLInputElement).files || []);
+
                     if (files.length > 0) {
                       try {
                         for (const file of files) {
@@ -499,11 +503,11 @@ export const Menu = () => {
                           const filePath = `${WORK_DIR}/${file.name}`;
                           await workbenchStore.createFile(filePath, content);
                         }
-                        
+
                         // Update editor documents to reflect all newly created files
                         const allFiles = workbenchStore.files.get();
                         workbenchStore.setDocuments(allFiles, false);
-                        
+
                         toast.success(`${files.length} file(s) imported`);
                       } catch (error: any) {
                         console.error('Failed to import files to workbench:', error);
@@ -519,7 +523,6 @@ export const Menu = () => {
                 <span className="inline-block i-ph:file-arrow-up h-5 w-5 mb-1 text-mindvex-elements-textSecondary" />
                 <span className="text-xs text-mindvex-elements-textPrimary">Import File</span>
               </button>
-
             </div>
             <div className="relative w-full">
               <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -557,24 +560,24 @@ export const Menu = () => {
               <div className="flex items-center justify-between text-sm px-1 py-2">
                 <div className="font-medium text-mindvex-elements-textSecondary">Your Chats</div>
               </div>
-              <ChatHistory 
+              <ChatHistory
                 selectionMode={selectionMode}
                 selectedItems={selectedItems}
                 onToggleSelection={toggleItemSelection}
               />
             </div>
-            
+
             <div className="border-t border-mindvex-elements-borderColor pt-4 mt-4">
               <div className="flex items-center justify-between text-sm px-1 py-2">
                 <div className="font-medium text-mindvex-elements-textSecondary">Your Repos</div>
               </div>
-              <RepositoryHistory 
+              <RepositoryHistory
                 selectionMode={selectionMode}
                 selectedItems={selectedItems}
                 onToggleSelection={toggleItemSelection}
               />
             </div>
-            
+
             <DialogRoot open={dialogContent !== null}>
               <Dialog onBackdrop={closeDialog} onClose={closeDialog}>
                 {dialogContent?.type === 'delete' && (
@@ -591,7 +594,8 @@ export const Menu = () => {
                           </span>
                         </p>
                         <p className="mt-2">
-                          Are you sure you want to {dialogContent.item.urlId ? 'delete this chat' : 'remove this repository from history'}?
+                          Are you sure you want to{' '}
+                          {dialogContent.item.urlId ? 'delete this chat' : 'remove this repository from history'}?
                         </p>
                       </DialogDescription>
                     </div>
@@ -619,7 +623,7 @@ export const Menu = () => {
                         {(() => {
                           const hasChats = dialogContent.items.some((item: any) => item.urlId);
                           const hasRepos = dialogContent.items.some((item: any) => !item.urlId);
-                          
+
                           if (hasChats && hasRepos) {
                             return 'Delete Selected Items?';
                           } else if (hasChats) {
@@ -635,7 +639,7 @@ export const Menu = () => {
                           {(() => {
                             const hasChats = dialogContent.items.some((item: any) => item.urlId);
                             const hasRepos = dialogContent.items.some((item: any) => !item.urlId);
-                            
+
                             if (hasChats && hasRepos) {
                               return 'items';
                             } else if (hasChats) {
@@ -643,22 +647,26 @@ export const Menu = () => {
                             } else {
                               return 'repository' + (dialogContent.items.length === 1 ? '' : 'ies');
                             }
-                          })()}:
+                          })()}
+                          :
                         </p>
                         <div className="mt-2 max-h-32 overflow-auto border border-mindvex-elements-borderColor rounded-md bg-mindvex-elements-bg-depth-2 p-2">
                           <ul className="list-disc pl-5 space-y-1 text-mindvex-elements-textPrimary">
                             {dialogContent.items.map((item: any) => (
                               <li key={item.id} className="text-sm">
-                                <span className="font-medium text-mindvex-elements-item-contentAccent">{item.description}</span>
+                                <span className="font-medium text-mindvex-elements-item-contentAccent">
+                                  {item.description}
+                                </span>
                               </li>
                             ))}
                           </ul>
                         </div>
                         <p className="mt-3">
-                          Are you sure you want to {(() => {
+                          Are you sure you want to{' '}
+                          {(() => {
                             const hasChats = dialogContent.items.some((item: any) => item.urlId);
                             const hasRepos = dialogContent.items.some((item: any) => !item.urlId);
-                            
+
                             if (hasChats && hasRepos) {
                               return 'delete these items';
                             } else if (hasChats) {
@@ -666,7 +674,8 @@ export const Menu = () => {
                             } else {
                               return 'remove these repositories from history';
                             }
-                          })()}?
+                          })()}
+                          ?
                         </p>
                       </DialogDescription>
                     </div>
@@ -698,6 +707,20 @@ export const Menu = () => {
           <div className="flex items-center justify-between border-t border-mindvex-elements-borderColor px-4 py-3">
             <div className="flex items-center gap-3">
               <SettingsButton onClick={handleSettingsClick} />
+              {auth.isAuthenticated && (
+                <button
+                  onClick={() => {
+                    clearAuth();
+                    toast.success('Logged out successfully');
+                    window.location.href = '/';
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mindvex-elements-item-backgroundActive hover:bg-mindvex-elements-item-backgroundHover text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary transition-colors"
+                  title="Logout"
+                >
+                  <div className="i-ph:sign-out h-4 w-4" />
+                  <span className="text-sm">Logout</span>
+                </button>
+              )}
             </div>
             <ThemeSwitch />
           </div>

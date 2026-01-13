@@ -26,27 +26,27 @@ export default function EditorPage() {
           <ClientOnly fallback={<div>Loading editor...</div>}>
             {() => {
               const [showWorkbench, setShowWorkbench] = React.useState(false);
-              
+
               React.useEffect(() => {
                 // Subscribe to workbench state changes
                 const unsubscribe = workbenchStore.showWorkbench.subscribe((value: boolean) => {
                   setShowWorkbench(value);
                 });
-                
+
                 // Ensure workbench is shown when on editor page
                 if (!workbenchStore.showWorkbench.get()) {
                   workbenchStore.showWorkbench.set(true);
                 }
-                
+
                 // Load the saved workspace state if available
                 workbenchStore.loadWorkspaceState();
-                
+
                 // Set documents to update the editor store
                 workbenchStore.setDocuments(workbenchStore.files.get(), false);
-                
+
                 return unsubscribe;
               }, []);
-              
+
               return (
                 <div className="flex-1 h-full">
                   <Workbench chatStarted={false} isStreaming={false} standalone={true} />

@@ -106,7 +106,7 @@ class LogStore {
       return;
     }
 
-    localStorage.setItem('mindvex_read_logs', JSON.stringify(Array.from(this._readLogs)))
+    localStorage.setItem('mindvex_read_logs', JSON.stringify(Array.from(this._readLogs)));
   }
 
   private _generateId(): string {

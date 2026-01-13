@@ -7,7 +7,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-mindvex-elements-background text-mindvex-elements-textPrimary hover:bg-mindvex-elements-background-depth-2',
+        default:
+          'bg-mindvex-elements-background text-mindvex-elements-textPrimary hover:bg-mindvex-elements-background-depth-2',
         destructive: 'bg-red-500 text-white hover:bg-red-600',
         outline:
           'border border-mindvex-elements-borderColor bg-transparent hover:bg-mindvex-elements-background-depth-2 hover:text-mindvex-elements-textPrimary text-mindvex-elements-textPrimary dark:border-mindvex-elements-borderColorActive',
