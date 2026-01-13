@@ -23,7 +23,6 @@ import { DataTab } from '~/components/@settings/tabs/data/DataTab';
 import { EventLogsTab } from '~/components/@settings/tabs/event-logs/EventLogsTab';
 import GitHubTab from '~/components/@settings/tabs/github/GitHubTab';
 import GitLabTab from '~/components/@settings/tabs/gitlab/GitLabTab';
-import SupabaseTab from '~/components/@settings/tabs/supabase/SupabaseTab';
 import VercelTab from '~/components/@settings/tabs/vercel/VercelTab';
 import NetlifyTab from '~/components/@settings/tabs/netlify/NetlifyTab';
 import CloudProvidersTab from '~/components/@settings/tabs/providers/cloud/CloudProvidersTab';
@@ -141,8 +140,6 @@ export const ControlPanel = ({ open, onClose }: ControlPanelProps) => {
         return <GitHubTab />;
       case 'gitlab':
         return <GitLabTab />;
-      case 'supabase':
-        return <SupabaseTab />;
       case 'vercel':
         return <VercelTab />;
       case 'netlify':
@@ -165,7 +162,6 @@ export const ControlPanel = ({ open, onClose }: ControlPanelProps) => {
         return hasUnreadNotifications;
       case 'github':
       case 'gitlab':
-      case 'supabase':
       case 'vercel':
       case 'netlify':
         return hasConnectionIssues;
@@ -182,7 +178,6 @@ export const ControlPanel = ({ open, onClose }: ControlPanelProps) => {
         return `${unreadNotifications.length} unread notification${unreadNotifications.length === 1 ? '' : 's'}`;
       case 'github':
       case 'gitlab':
-      case 'supabase':
       case 'vercel':
       case 'netlify':
         return currentIssue === 'disconnected'
@@ -210,7 +205,6 @@ export const ControlPanel = ({ open, onClose }: ControlPanelProps) => {
         break;
       case 'github':
       case 'gitlab':
-      case 'supabase':
       case 'vercel':
       case 'netlify':
         acknowledgeIssue();

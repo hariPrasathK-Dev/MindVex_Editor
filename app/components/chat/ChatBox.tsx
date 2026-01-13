@@ -11,7 +11,6 @@ import { SendButton } from './SendButton.client';
 import { IconButton } from '~/components/ui/IconButton';
 import { toast } from 'react-toastify';
 import { SpeechRecognitionButton } from '~/components/chat/SpeechRecognition';
-import { SupabaseConnection } from './SupabaseConnection';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
 import styles from './BaseChat.module.scss';
 import type { ProviderInfo } from '~/types/model';
@@ -267,13 +266,13 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             />
           )}
         </ClientOnly>
-        
+
         {/* Display selected files when in selected-files mode */}
         {props.chatContextMode === 'selected-files' && props.selectedContextFiles && props.selectedContextFiles.length > 0 && (
           <div className="mt-2 p-2 bg-mindvex-elements-background-depth-2 rounded border border-mindvex-elements-borderColor">
             <div className="flex items-center gap-1 mb-1">
               <span className="text-xs font-medium text-mindvex-elements-textPrimary">Selected Files:</span>
-              <button 
+              <button
                 className="text-xs text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary"
                 onClick={() => props.setSelectedContextFiles?.([])}
               >
@@ -356,7 +355,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
               <div className={`i-ph:caret-${props.isModelSettingsCollapsed ? 'right' : 'down'} text-lg`} />
               {props.isModelSettingsCollapsed ? <span className="text-xs">{props.model}</span> : <span />}
             </IconButton>
-            
+
             {/* Context Mode Selector */}
             {props.chatContextMode !== undefined && props.setChatContextMode !== undefined && (
               <div className="flex items-center gap-1">
@@ -379,7 +378,6 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
               <kbd className="kdb px-1.5 py-0.5 rounded bg-mindvex-elements-background-depth-2">Return</kbd> a new line
             </div>
           ) : null}
-          <SupabaseConnection />
           <ExpoQrModal open={props.qrModalOpen} onClose={() => props.setQrModalOpen(false)} />
         </div>
       </div>

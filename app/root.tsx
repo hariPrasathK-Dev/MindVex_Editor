@@ -125,6 +125,16 @@ export default function App() {
       timestamp: new Date().toISOString(),
     });
 
+    // Initialize authentication
+    import('./lib/stores/authStore')
+      .then(({ initAuth }) => {
+        initAuth();
+        logStore.logSystem('Auth initialized');
+      })
+      .catch((error) => {
+        logStore.logError('Failed to initialize auth', error);
+      });
+
     // Initialize debug logging with improved error handling
     import('./utils/debugLogger')
       .then(({ debugLogger }) => {

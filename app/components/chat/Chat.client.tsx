@@ -22,12 +22,13 @@ import { getTemplates, selectStarterTemplate } from '~/utils/selectStarterTempla
 import { logStore } from '~/lib/stores/logs';
 import { streamingState } from '~/lib/stores/streaming';
 import { filesToArtifacts } from '~/utils/fileUtils';
-import { supabaseConnection } from '~/lib/stores/supabase';
 import { defaultDesignScheme, type DesignScheme } from '~/types/design-scheme';
 import type { ElementInfo } from '~/components/workbench/Inspector';
 import type { TextUIPart, FileUIPart, Attachment } from '@ai-sdk/ui-utils';
 import { useMCPStore } from '~/lib/stores/mcp';
 import type { LlmErrorAlertType } from '~/types/actions';
+import { createChat as createBackendChat, currentChatStore, sendMessage as sendBackendMessage } from '~/lib/stores/chatStore';
+import { currentWorkspaceStore } from '~/lib/stores/workspaceStore';
 
 const logger = createScopedLogger('Chat');
 
@@ -105,10 +106,6 @@ export const ChatImpl = memo(
     const [selectedContextFiles, setSelectedContextFiles] = useState<string[]>([]);
     const actionAlert = useStore(workbenchStore.alert);
     const deployAlert = useStore(workbenchStore.deployAlert);
-    const supabaseConn = useStore(supabaseConnection);
-    const selectedProject = supabaseConn.stats?.projects?.find(
-      (project) => project.id === supabaseConn.selectedProjectId,
-    );
     const supabaseAlert = useStore(workbenchStore.supabaseAlert);
     const { activeProviders, promptId, autoSelectTemplate, contextOptimizationEnabled } = useSettings();
     const [llmErrorAlert, setLlmErrorAlert] = useState<LlmErrorAlertType | undefined>(undefined);
@@ -147,17 +144,17 @@ export const ChatImpl = memo(
       body: {
         apiKeys,
         files: {
-          ...(chatContextMode === 'no-context' 
-              ? {} // No context mode - send no files
-              : chatContextMode === 'selected-files' && selectedContextFiles.length > 0
-                ? Object.fromEntries(
-                    selectedContextFiles
-                      .filter(filePath => files[filePath])
-                      .map(filePath => [filePath, files[filePath]])
-                  )
-                : chatContextMode === 'active-file' && selectedFile && files[selectedFile]
-                  ? { [selectedFile]: files[selectedFile] } // Active file mode - send only selected file
-                  : { ...files, ...contextFiles } // Default behavior - include all files
+          ...(chatContextMode === 'no-context'
+            ? {} // No context mode - send no files
+            : chatContextMode === 'selected-files' && selectedContextFiles.length > 0
+              ? Object.fromEntries(
+                selectedContextFiles
+                  .filter(filePath => files[filePath])
+                  .map(filePath => [filePath, files[filePath]])
+              )
+              : chatContextMode === 'active-file' && selectedFile && files[selectedFile]
+                ? { [selectedFile]: files[selectedFile] } // Active file mode - send only selected file
+                : { ...files, ...contextFiles } // Default behavior - include all files
           ),
           ...contextFiles // Always include context files from AddContextButton
         },
@@ -165,14 +162,6 @@ export const ChatImpl = memo(
         contextOptimization: contextSelectionMode === 'auto' && contextOptimizationEnabled, // Only use context optimization if in auto mode
         chatMode,
         designScheme,
-        supabase: {
-          isConnected: supabaseConn.isConnected,
-          hasSelectedProject: !!selectedProject,
-          credentials: {
-            supabaseUrl: supabaseConn?.credentials?.supabaseUrl,
-            anonKey: supabaseConn?.credentials?.anonKey,
-          },
-        },
         maxLLMSteps: mcpSettings.maxLLMSteps,
         chatContextMode,
         selectedContextFiles,
@@ -182,7 +171,7 @@ export const ChatImpl = memo(
         setFakeLoading(false);
         handleError(e, 'chat');
       },
-      onFinish: (message, response) => {
+      onFinish: async (message, response) => {
         const usage = response.usage;
         setData(undefined);
 
@@ -199,7 +188,24 @@ export const ChatImpl = memo(
         }
 
         logger.debug('Finished streaming');
-        
+
+        // Save AI response to backend
+        const currentChat = currentChatStore.get();
+        if (currentChat) {
+          try {
+            await sendBackendMessage(
+              currentChat.id,
+              message.content,
+              'assistant',
+              { model, provider: provider.name, usage, timestamp: new Date().toISOString() }
+            );
+            logStore.logSystem('AI message saved to backend', { chatId: currentChat.id });
+          } catch (error) {
+            logStore.logError('Failed to save AI message to backend', error);
+            console.error('Failed to save AI message:', error);
+          }
+        }
+
         // Ensure the UI updates after finishing
         // Use callback form to ensure we get the latest messages
         setMessages(prevMessages => [...prevMessages]);
@@ -433,6 +439,26 @@ ${prompt}`,
         return;
       }
 
+      // Ensure chat exists before sending message
+      let currentChat = currentChatStore.get();
+      const currentWorkspace = currentWorkspaceStore.get();
+
+      if (!currentChat && currentWorkspace && !chatStarted) {
+        try {
+          // Create a new chat for this conversation
+          const chatTitle = messageContent.slice(0, 50) + (messageContent.length > 50 ? '...' : '');
+          currentChat = await createBackendChat(currentWorkspace.id, chatTitle);
+          logStore.logSystem('Chat created for new conversation', {
+            chatId: currentChat.id,
+            workspaceId: currentWorkspace.id,
+            title: chatTitle,
+          });
+        } catch (error) {
+          logStore.logError('Failed to create chat', error);
+          console.error('Failed to create chat, continuing without backend persistence:', error);
+        }
+      }
+
       let finalMessageContent = messageContent;
 
       if (selectedElement) {
@@ -480,13 +506,13 @@ ${finalMessageContent}`;
                 content: userMessageText,
                 parts: createMessageParts(userMessageText, imageDataList),
               });
-              
+
               await append({
                 id: `2-${new Date().getTime()}`,
                 role: 'assistant',
                 content: assistantMessage,
               });
-              
+
               await append({
                 id: `3-${new Date().getTime()}`,
                 role: 'user',
@@ -529,6 +555,23 @@ ${finalMessageContent}`;
           parts: createMessageParts(userMessageText, imageDataList),
           experimental_attachments: attachments,
         });
+
+        // Save user message to backend
+        if (currentChat) {
+          try {
+            await sendBackendMessage(
+              currentChat.id,
+              finalMessageContent,
+              'user',
+              { model, provider: provider.name, timestamp: new Date().toISOString() }
+            );
+            logStore.logSystem('User message saved to backend', { chatId: currentChat.id });
+          } catch (error) {
+            logStore.logError('Failed to save user message to backend', error);
+            console.error('Failed to save user message:', error);
+          }
+        }
+
         setFakeLoading(false);
         setInput('');
         Cookies.remove(PROMPT_COOKIE_KEY);
@@ -590,6 +633,22 @@ ${finalMessageContent}`;
           },
           attachmentOptions,
         );
+
+        // Save user message to backend for ongoing chat
+        if (currentChat) {
+          try {
+            await sendBackendMessage(
+              currentChat.id,
+              finalMessageContent,
+              'user',
+              { model, provider: provider.name, timestamp: new Date().toISOString() }
+            );
+            logStore.logSystem('User message saved to backend', { chatId: currentChat.id });
+          } catch (error) {
+            logStore.logError('Failed to save user message to backend', error);
+            console.error('Failed to save user message:', error);
+          }
+        }
       }
 
       setInput('');
@@ -672,10 +731,10 @@ ${finalMessageContent}`;
           if (message.role === 'user') {
             return message;
           }
-      
+
           // Use the original message content if parsedMessages is not available at this index
           const parsedContent = parsedMessages && parsedMessages[i] !== undefined ? parsedMessages[i] : message.content;
-          
+
           return {
             ...message,
             content: parsedContent,
