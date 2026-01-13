@@ -27,7 +27,11 @@ import type { ElementInfo } from '~/components/workbench/Inspector';
 import type { TextUIPart, FileUIPart, Attachment } from '@ai-sdk/ui-utils';
 import { useMCPStore } from '~/lib/stores/mcp';
 import type { LlmErrorAlertType } from '~/types/actions';
-import { createChat as createBackendChat, currentChatStore, sendMessage as sendBackendMessage } from '~/lib/stores/chatStore';
+import {
+  createChat as createBackendChat,
+  currentChatStore,
+  sendMessage as sendBackendMessage,
+} from '~/lib/stores/chatStore';
 import { currentWorkspaceStore } from '~/lib/stores/workspaceStore';
 
 const logger = createScopedLogger('Chat');
@@ -102,7 +106,9 @@ export const ChatImpl = memo(
     const [contextFiles, setContextFiles] = useState<Record<string, any>>({});
     const [designScheme, setDesignScheme] = useState<DesignScheme>(defaultDesignScheme);
     const [contextSelectionMode, setContextSelectionMode] = useState<'auto' | 'manual'>('auto'); // 'auto' for AI selection, 'manual' for user selection
-    const [chatContextMode, setChatContextMode] = useState<'active-file' | 'selected-files' | 'no-context'>('active-file');
+    const [chatContextMode, setChatContextMode] = useState<'active-file' | 'selected-files' | 'no-context'>(
+      'active-file',
+    );
     const [selectedContextFiles, setSelectedContextFiles] = useState<string[]>([]);
     const actionAlert = useStore(workbenchStore.alert);
     const deployAlert = useStore(workbenchStore.deployAlert);
@@ -149,14 +155,13 @@ export const ChatImpl = memo(
             : chatContextMode === 'selected-files' && selectedContextFiles.length > 0
               ? Object.fromEntries(
                 selectedContextFiles
-                  .filter(filePath => files[filePath])
-                  .map(filePath => [filePath, files[filePath]])
+                  .filter((filePath) => files[filePath])
+                  .map((filePath) => [filePath, files[filePath]]),
               )
               : chatContextMode === 'active-file' && selectedFile && files[selectedFile]
                 ? { [selectedFile]: files[selectedFile] } // Active file mode - send only selected file
-                : { ...files, ...contextFiles } // Default behavior - include all files
-          ),
-          ...contextFiles // Always include context files from AddContextButton
+                : { ...files, ...contextFiles }), // Default behavior - include all files
+          ...contextFiles, // Always include context files from AddContextButton
         },
         promptId,
         contextOptimization: contextSelectionMode === 'auto' && contextOptimizationEnabled, // Only use context optimization if in auto mode
@@ -191,6 +196,7 @@ export const ChatImpl = memo(
 
         // Save AI response to backend
         const currentChat = currentChatStore.get();
+
         if (currentChat) {
           try {
             await sendBackendMessage(
@@ -206,9 +212,11 @@ export const ChatImpl = memo(
           }
         }
 
-        // Ensure the UI updates after finishing
-        // Use callback form to ensure we get the latest messages
-        setMessages(prevMessages => [...prevMessages]);
+        /*
+         * Ensure the UI updates after finishing
+         * Use callback form to ensure we get the latest messages
+         */
+        setMessages((prevMessages) => [...prevMessages]);
       },
       initialMessages,
       initialInput: Cookies.get(PROMPT_COOKIE_KEY) || '',
@@ -562,224 +570,226 @@ ${finalMessageContent}`;
             await sendBackendMessage(
               currentChat.id,
               finalMessageContent,
-              'user',
-              { model, provider: provider.name, timestamp: new Date().toISOString() }
-            );
-            logStore.logSystem('User message saved to backend', { chatId: currentChat.id });
+              model,
+              provider: provider.name,
+              timestamp: new Date().toISOString(),
+            });
+logStore.logSystem('User message saved to backend', { chatId: currentChat.id });
           } catch (error) {
-            logStore.logError('Failed to save user message to backend', error);
-            console.error('Failed to save user message:', error);
-          }
+  logStore.logError('Failed to save user message to backend', error);
+  console.error('Failed to save user message:', error);
+}
         }
 
-        setFakeLoading(false);
-        setInput('');
-        Cookies.remove(PROMPT_COOKIE_KEY);
+setFakeLoading(false);
+setInput('');
+Cookies.remove(PROMPT_COOKIE_KEY);
 
-        setUploadedFiles([]);
-        setImageDataList([]);
+setUploadedFiles([]);
+setImageDataList([]);
 
-        resetEnhancer();
+resetEnhancer();
 
-        textareaRef.current?.blur();
+textareaRef.current?.blur();
 
-        return;
+return;
       }
 
-      if (error != null) {
-        setMessages(messages.slice(0, -1));
-      }
+if (error != null) {
+  setMessages(messages.slice(0, -1));
+}
 
-      const modifiedFiles = workbenchStore.getModifiedFiles();
+const modifiedFiles = workbenchStore.getModifiedFiles();
 
-      chatStore.setKey('aborted', false);
+chatStore.setKey('aborted', false);
 
-      if (modifiedFiles !== undefined) {
-        const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
-        const messageText = `[Model: ${model}]
+if (modifiedFiles !== undefined) {
+  const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
+  const messageText = `[Model: ${model}]
 
 [Provider: ${provider.name}]
 
 ${userUpdateArtifact}${finalMessageContent}`;
 
-        const attachmentOptions =
-          uploadedFiles.length > 0 ? { experimental_attachments: await filesToAttachments(uploadedFiles) } : undefined;
+  const attachmentOptions =
+    uploadedFiles.length > 0 ? { experimental_attachments: await filesToAttachments(uploadedFiles) } : undefined;
 
-        append(
-          {
-            role: 'user',
-            content: messageText,
-            parts: createMessageParts(messageText, imageDataList),
-          },
-          attachmentOptions,
-        );
+  append(
+    {
+      role: 'user',
+      content: messageText,
+      parts: createMessageParts(messageText, imageDataList),
+    },
+    attachmentOptions,
+  );
 
-        workbenchStore.resetAllFileModifications();
-      } else {
-        const messageText = `[Model: ${model}]
+  workbenchStore.resetAllFileModifications();
+} else {
+  const messageText = `[Model: ${model}]
 
 [Provider: ${provider.name}]
 
 ${finalMessageContent}`;
 
-        const attachmentOptions =
-          uploadedFiles.length > 0 ? { experimental_attachments: await filesToAttachments(uploadedFiles) } : undefined;
+  const attachmentOptions =
+    uploadedFiles.length > 0 ? { experimental_attachments: await filesToAttachments(uploadedFiles) } : undefined;
 
-        append(
-          {
-            role: 'user',
-            content: messageText,
-            parts: createMessageParts(messageText, imageDataList),
-          },
-          attachmentOptions,
-        );
+  append(
+    {
+      role: 'user',
+      content: messageText,
+      parts: createMessageParts(messageText, imageDataList),
+    },
+    attachmentOptions,
+  );
 
-        // Save user message to backend for ongoing chat
-        if (currentChat) {
-          try {
-            await sendBackendMessage(
-              currentChat.id,
-              finalMessageContent,
-              'user',
-              { model, provider: provider.name, timestamp: new Date().toISOString() }
-            );
-            logStore.logSystem('User message saved to backend', { chatId: currentChat.id });
-          } catch (error) {
-            logStore.logError('Failed to save user message to backend', error);
-            console.error('Failed to save user message:', error);
-          }
-        }
+  // Save user message to backend for ongoing chat
+  if (currentChat) {
+    try {
+      await sendBackendMessage(
+        currentChat.id,
+        finalMessageContent,
+        model,
+        provider: provider.name,
+        timestamp: new Date().toISOString(),
+            });
+    logStore.logSystem('User message saved to backend', { chatId: currentChat.id });
+  } catch (error) {
+    logStore.logError('Failed to save user message to backend', error);
+    console.error('Failed to save user message:', error);
+  }
+}
       }
 
-      setInput('');
-      Cookies.remove(PROMPT_COOKIE_KEY);
+setInput('');
+Cookies.remove(PROMPT_COOKIE_KEY);
 
-      setUploadedFiles([]);
-      setImageDataList([]);
+setUploadedFiles([]);
+setImageDataList([]);
 
-      resetEnhancer();
+resetEnhancer();
 
-      textareaRef.current?.blur();
+textareaRef.current?.blur();
     };
 
-    /**
-     * Handles the change event for the textarea and updates the input state.
-     * @param event - The change event from the textarea.
-     */
-    const onTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-      handleInputChange(event);
-    };
+/**
+ * Handles the change event for the textarea and updates the input state.
+ * @param event - The change event from the textarea.
+ */
+const onTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  handleInputChange(event);
+};
 
-    /**
-     * Debounced function to cache the prompt in cookies.
-     * Caches the trimmed value of the textarea input after a delay to optimize performance.
-     */
-    const debouncedCachePrompt = useCallback(
-      debounce((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const trimmedValue = event.target.value.trim();
-        Cookies.set(PROMPT_COOKIE_KEY, trimmedValue, { expires: 30 });
-      }, 1000),
-      [],
-    );
+/**
+ * Debounced function to cache the prompt in cookies.
+ * Caches the trimmed value of the textarea input after a delay to optimize performance.
+ */
+const debouncedCachePrompt = useCallback(
+  debounce((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const trimmedValue = event.target.value.trim();
+    Cookies.set(PROMPT_COOKIE_KEY, trimmedValue, { expires: 30 });
+  }, 1000),
+  [],
+);
 
-    useEffect(() => {
-      const storedApiKeys = Cookies.get('apiKeys');
+useEffect(() => {
+  const storedApiKeys = Cookies.get('apiKeys');
 
-      if (storedApiKeys) {
-        setApiKeys(JSON.parse(storedApiKeys));
+  if (storedApiKeys) {
+    setApiKeys(JSON.parse(storedApiKeys));
+  }
+}, []);
+
+const handleModelChange = (newModel: string) => {
+  setModel(newModel);
+  Cookies.set('selectedModel', newModel, { expires: 30 });
+};
+
+const handleProviderChange = (newProvider: ProviderInfo) => {
+  setProvider(newProvider);
+  Cookies.set('selectedProvider', newProvider.name, { expires: 30 });
+};
+
+return (
+  <BaseChat
+    ref={animationScope}
+    textareaRef={textareaRef}
+    input={input}
+    showChat={showChat}
+    chatStarted={chatStarted}
+    isStreaming={isLoading || fakeLoading}
+    onStreamingChange={(streaming) => {
+      streamingState.set(streaming);
+    }}
+    enhancingPrompt={enhancingPrompt}
+    promptEnhanced={promptEnhanced}
+    sendMessage={sendMessage}
+    model={model}
+    setModel={handleModelChange}
+    provider={provider}
+    setProvider={handleProviderChange}
+    providerList={activeProviders}
+    handleInputChange={(e) => {
+      onTextareaChange(e);
+      debouncedCachePrompt(e);
+    }}
+    handleStop={abort}
+    description={description}
+    importChat={importChat}
+    exportChat={exportChat}
+    messages={messages.map((message, i) => {
+      if (message.role === 'user') {
+        return message;
       }
-    }, []);
 
-    const handleModelChange = (newModel: string) => {
-      setModel(newModel);
-      Cookies.set('selectedModel', newModel, { expires: 30 });
-    };
+      // Use the original message content if parsedMessages is not available at this index
+      const parsedContent = parsedMessages && parsedMessages[i] !== undefined ? parsedMessages[i] : message.content;
 
-    const handleProviderChange = (newProvider: ProviderInfo) => {
-      setProvider(newProvider);
-      Cookies.set('selectedProvider', newProvider.name, { expires: 30 });
-    };
-
-    return (
-      <BaseChat
-        ref={animationScope}
-        textareaRef={textareaRef}
-        input={input}
-        showChat={showChat}
-        chatStarted={chatStarted}
-        isStreaming={isLoading || fakeLoading}
-        onStreamingChange={(streaming) => {
-          streamingState.set(streaming);
-        }}
-        enhancingPrompt={enhancingPrompt}
-        promptEnhanced={promptEnhanced}
-        sendMessage={sendMessage}
-        model={model}
-        setModel={handleModelChange}
-        provider={provider}
-        setProvider={handleProviderChange}
-        providerList={activeProviders}
-        handleInputChange={(e) => {
-          onTextareaChange(e);
-          debouncedCachePrompt(e);
-        }}
-        handleStop={abort}
-        description={description}
-        importChat={importChat}
-        exportChat={exportChat}
-        messages={messages.map((message, i) => {
-          if (message.role === 'user') {
-            return message;
-          }
-
-          // Use the original message content if parsedMessages is not available at this index
-          const parsedContent = parsedMessages && parsedMessages[i] !== undefined ? parsedMessages[i] : message.content;
-
-          return {
-            ...message,
-            content: parsedContent,
-          };
-        })}
-        enhancePrompt={() => {
-          enhancePrompt(
-            input,
-            (input) => {
-              setInput(input);
-              scrollTextArea();
-            },
-            model,
-            provider,
-            apiKeys,
-          );
-        }}
-        uploadedFiles={uploadedFiles}
-        setUploadedFiles={setUploadedFiles}
-        imageDataList={imageDataList}
-        setImageDataList={setImageDataList}
-        actionAlert={actionAlert}
-        clearAlert={() => workbenchStore.clearAlert()}
-        supabaseAlert={supabaseAlert}
-        clearSupabaseAlert={() => workbenchStore.clearSupabaseAlert()}
-        deployAlert={deployAlert}
-        clearDeployAlert={() => workbenchStore.clearDeployAlert()}
-        llmErrorAlert={llmErrorAlert}
-        clearLlmErrorAlert={clearApiErrorAlert}
-        data={chatData}
-        chatMode={chatMode}
-        setChatMode={setChatMode}
-        append={append}
-        designScheme={designScheme}
-        setDesignScheme={setDesignScheme}
-        selectedElement={selectedElement}
-        setSelectedElement={setSelectedElement}
-        addToolResult={addToolResult}
-        inRightPanel={inRightPanel}
-        onContextFilesSelected={setContextFiles}
-        chatContextMode={chatContextMode}
-        setChatContextMode={setChatContextMode}
-        selectedContextFiles={selectedContextFiles}
-        setSelectedContextFiles={setSelectedContextFiles}
-      />
-    );
+      return {
+        ...message,
+        content: parsedContent,
+      };
+    })}
+    enhancePrompt={() => {
+      enhancePrompt(
+        input,
+        (input) => {
+          setInput(input);
+          scrollTextArea();
+        },
+        model,
+        provider,
+        apiKeys,
+      );
+    }}
+    uploadedFiles={uploadedFiles}
+    setUploadedFiles={setUploadedFiles}
+    imageDataList={imageDataList}
+    setImageDataList={setImageDataList}
+    actionAlert={actionAlert}
+    clearAlert={() => workbenchStore.clearAlert()}
+    supabaseAlert={supabaseAlert}
+    clearSupabaseAlert={() => workbenchStore.clearSupabaseAlert()}
+    deployAlert={deployAlert}
+    clearDeployAlert={() => workbenchStore.clearDeployAlert()}
+    llmErrorAlert={llmErrorAlert}
+    clearLlmErrorAlert={clearApiErrorAlert}
+    data={chatData}
+    chatMode={chatMode}
+    setChatMode={setChatMode}
+    append={append}
+    designScheme={designScheme}
+    setDesignScheme={setDesignScheme}
+    selectedElement={selectedElement}
+    setSelectedElement={setSelectedElement}
+    addToolResult={addToolResult}
+    inRightPanel={inRightPanel}
+    onContextFilesSelected={setContextFiles}
+    chatContextMode={chatContextMode}
+    setChatContextMode={setChatContextMode}
+    selectedContextFiles={selectedContextFiles}
+    setSelectedContextFiles={setSelectedContextFiles}
+  />
+);
   },
 );
