@@ -1,2 +1,1 @@
-# Increase Node.js memory limit for build
-NODE_OPTIONS=--max-old-space-size=4096
+18
