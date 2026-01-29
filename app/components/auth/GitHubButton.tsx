@@ -1,0 +1,25 @@
+import { useState } from 'react';
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080/api';
+
+export function GitHubButton() {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleGitHubLogin = () => {
+        setIsLoading(true);
+        // Redirect to backend OAuth endpoint
+        const redirectUri = `${window.location.origin}/auth/callback`;
+        window.location.href = `${API_BASE_URL}/auth/oauth2/authorize/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    };
+
+    return (
+        <button
+            onClick={handleGitHubLogin}
+            disabled={isLoading}
+            className="w-full py-3 bg-[#24292e] hover:bg-[#2f363d] text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+            <div className="i-ph:github-logo text-xl" />
+            <span>{isLoading ? 'Connecting to GitHub...' : 'Continue with GitHub'}</span>
+        </button>
+    );
+}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { backendApi } from '~/lib/services/backendApiService';
 import { setAuth } from '~/lib/stores/authStore';
 import { toast } from 'react-toastify';
+import { GitHubButton } from './GitHubButton';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -62,6 +63,21 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
             <p className="text-mindvex-elements-textSecondary">
               {isLogin ? 'Sign in to continue to MindVex' : 'Get started with MindVex'}
             </p>
+          </div>
+
+          {/* GitHub OAuth */}
+          <GitHubButton />
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-mindvex-elements-borderColor"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-mindvex-elements-background-depth-2 text-mindvex-elements-textSecondary">
+                Or continue with email
+              </span>
+            </div>
           </div>
 
           {/* Form */}
@@ -144,7 +160,7 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
                 setPassword('');
                 setFullName('');
               }}
-              className="text-sm font-medium text-mindvex-elements-button-primary-background hover:text-mindvex-elements-button-primary-backgroundHover transition-colors underline-offset-4 hover:underline bg-transparent border-none p-0"
+              className="text-sm font-medium text-[#ff6b35] hover:text-[#ff8c61] transition-colors underline-offset-4 hover:underline bg-transparent border-none p-0"
             >
               {isLogin ? 'Sign up' : 'Sign in'}
             </button>
