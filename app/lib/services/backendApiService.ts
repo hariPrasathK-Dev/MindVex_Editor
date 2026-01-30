@@ -8,6 +8,7 @@ import type {
   ChatMessage,
   ChatMessageRequest,
   ApiError,
+  OtpResponse,
 } from '~/types/backend';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080/api';
@@ -39,23 +40,43 @@ class BackendApiService {
     return response.json();
   }
 
-  // Authentication
-  async register(email: string, password: string, fullName: string): Promise<AuthResponse> {
+  // Authentication - Step 1: Initiate (sends OTP)
+  async initiateRegister(email: string, password: string, fullName: string): Promise<OtpResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, fullName }),
     });
-    return this.handleResponse<AuthResponse>(response);
+    return this.handleResponse<OtpResponse>(response);
   }
 
-  async login(email: string, password: string): Promise<AuthResponse> {
+  async initiateLogin(email: string, password: string): Promise<OtpResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
+    return this.handleResponse<OtpResponse>(response);
+  }
+
+  // Authentication - Step 2: Verify OTP
+  async verifyOtp(email: string, otp: string, type: 'login' | 'registration'): Promise<AuthResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp, type }),
+    });
     return this.handleResponse<AuthResponse>(response);
+  }
+
+  // Authentication - Resend OTP
+  async resendOtp(email: string, type: 'login' | 'registration'): Promise<OtpResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, type }),
+    });
+    return this.handleResponse<OtpResponse>(response);
   }
 
   async getCurrentUser(): Promise<User> {

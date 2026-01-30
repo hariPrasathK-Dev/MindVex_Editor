@@ -77,6 +77,7 @@ export default defineConfig((config) => {
       },
     },
     test: {
+      include: ['app/**/*.spec.ts', 'tests/unit/**/*.spec.ts'],
       exclude: [
         '**/node_modules/**',
         '**/dist/**',
@@ -84,7 +85,10 @@ export default defineConfig((config) => {
         '**/.{idea,git,cache,output,temp}/**',
         '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
         '**/tests/preview/**', // Exclude preview tests that require Playwright
+        '**/tests/e2e/**', // Exclude E2E tests that require Playwright
       ],
+      environment: 'jsdom',
+      globals: true,
     },
   };
 });
