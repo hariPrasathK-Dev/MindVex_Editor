@@ -1,8 +1,50 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { backendApi } from '~/lib/services/backendApiService';
 import { setAuth } from '~/lib/stores/authStore';
 import { toast } from 'react-toastify';
 import { GitHubButton } from './GitHubButton';
+import { OtpVerification } from './OtpVerification';
+
+/**
+ * Generates a cryptographically strong password
+ * @param length - Length of the password (default: 16)
+ * @returns A strong password string
+ */
+function generateStrongPassword(length: number = 16): string {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  const allChars = uppercase + lowercase + numbers + special;
+
+  // Use crypto API for secure random generation
+  const getSecureRandom = (max: number): number => {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0] % max;
+  };
+
+  // Ensure at least one character from each category
+  let password = '';
+  password += uppercase[getSecureRandom(uppercase.length)];
+  password += lowercase[getSecureRandom(lowercase.length)];
+  password += numbers[getSecureRandom(numbers.length)];
+  password += special[getSecureRandom(special.length)];
+
+  // Fill the rest with random characters
+  for (let i = 4; i < length; i++) {
+    password += allChars[getSecureRandom(allChars.length)];
+  }
+
+  // Shuffle the password to randomize character positions
+  const shuffled = password.split('');
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = getSecureRandom(i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.join('');
+}
 
 interface AuthModalProps {
   onClose: () => void;
@@ -16,6 +58,37 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [suggestedPassword, setSuggestedPassword] = useState<string | null>(null);
+  const [showSuggestion, setShowSuggestion] = useState(false);
+
+  // OTP verification state
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [otpType, setOtpType] = useState<'login' | 'registration'>('login');
+
+  // Generate a new strong password suggestion
+  const handleGeneratePassword = useCallback(() => {
+    const newPassword = generateStrongPassword(16);
+    setSuggestedPassword(newPassword);
+    setShowSuggestion(true);
+    setShowPassword(true); // Show password so user can see the suggestion
+  }, []);
+
+  // Use the suggested password
+  const handleUseSuggestedPassword = useCallback(() => {
+    if (suggestedPassword) {
+      setPassword(suggestedPassword);
+      setShowSuggestion(false);
+      toast.success('Strong password applied!');
+    }
+  }, [suggestedPassword]);
+
+  // Dismiss the suggestion
+  const handleDismissSuggestion = useCallback(() => {
+    setShowSuggestion(false);
+    setSuggestedPassword(null);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,15 +96,25 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
 
     try {
       if (isLogin) {
-        const { token, user } = await backendApi.login(email, password);
-        setAuth(token, user);
-        toast.success(`Welcome back, ${user.fullName}!`);
-        onClose();
+        // Step 1: Initiate login - this sends OTP
+        const response = await backendApi.initiateLogin(email, password);
+        if (response.requiresOtp) {
+          setPendingEmail(email);
+          setMaskedEmail(response.email);
+          setOtpType('login');
+          setShowOtpModal(true);
+          toast.info('Verification code sent to your email');
+        }
       } else {
-        const { token, user } = await backendApi.register(email, password, fullName);
-        setAuth(token, user);
-        toast.success(`Account created! Welcome, ${user.fullName}!`);
-        onClose();
+        // Step 1: Initiate registration - this sends OTP
+        const response = await backendApi.initiateRegister(email, password, fullName);
+        if (response.requiresOtp) {
+          setPendingEmail(email);
+          setMaskedEmail(response.email);
+          setOtpType('registration');
+          setShowOtpModal(true);
+          toast.info('Verification code sent to your email');
+        }
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Authentication failed');
@@ -39,6 +122,33 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
       setIsLoading(false);
     }
   };
+
+  // Handle successful OTP verification
+  const handleOtpVerified = (token: string, user: any) => {
+    setAuth(token, user);
+    setShowOtpModal(false);
+    onClose();
+  };
+
+  // Handle OTP cancellation
+  const handleOtpCancel = () => {
+    setShowOtpModal(false);
+    setPendingEmail('');
+    setMaskedEmail('');
+  };
+
+  // Show OTP verification modal
+  if (showOtpModal) {
+    return (
+      <OtpVerification
+        email={pendingEmail}
+        maskedEmail={maskedEmail}
+        type={otpType}
+        onVerified={handleOtpVerified}
+        onCancel={handleOtpCancel}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -129,6 +239,56 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
                   <div className={showPassword ? 'i-ph:eye-slash text-lg' : 'i-ph:eye text-lg'} />
                 </button>
               </div>
+
+              {/* Password Suggestion Feature - Only show during registration */}
+              {!isLogin && (
+                <div className="mt-3">
+                  {!showSuggestion ? (
+                    <button
+                      type="button"
+                      onClick={handleGeneratePassword}
+                      className="inline-flex items-center gap-2 text-sm text-[#ff6b35] hover:text-[#ff8c61] transition-colors font-medium"
+                    >
+                      <div className="i-ph:magic-wand text-base" />
+                      Suggest Strong Password
+                    </button>
+                  ) : (
+                    <div className="p-3 bg-mindvex-elements-background-depth-1 border border-green-500/30 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="i-ph:shield-check text-green-500" />
+                        <span className="text-xs font-medium text-green-500">Strong Password Suggestion</span>
+                      </div>
+                      <div className="font-mono text-sm text-mindvex-elements-textPrimary bg-black/20 px-3 py-2 rounded mb-3 break-all">
+                        {suggestedPassword}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleUseSuggestedPassword}
+                          className="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded transition-colors"
+                        >
+                          Use this password
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleGeneratePassword}
+                          className="px-3 py-1.5 bg-mindvex-elements-background-depth-2 hover:bg-mindvex-elements-background-depth-1 text-mindvex-elements-textSecondary hover:text-mindvex-elements-textPrimary text-sm font-medium rounded border border-mindvex-elements-borderColor transition-colors"
+                        >
+                          <div className="i-ph:arrows-clockwise" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDismissSuggestion}
+                          className="px-3 py-1.5 text-mindvex-elements-textSecondary hover:text-red-500 text-sm transition-colors"
+                          aria-label="Dismiss suggestion"
+                        >
+                          <div className="i-ph:x" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <button
@@ -159,6 +319,8 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
                 setEmail('');
                 setPassword('');
                 setFullName('');
+                setSuggestedPassword(null);
+                setShowSuggestion(false);
               }}
               className="text-sm font-medium text-[#ff6b35] hover:text-[#ff8c61] transition-colors underline-offset-4 hover:underline bg-transparent border-none p-0"
             >
