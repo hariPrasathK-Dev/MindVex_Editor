@@ -53,7 +53,7 @@ class WatsonxApiService {
      * Get list of available AI agents and their configuration status.
      */
     async getAgents(): Promise<WatsonxAgent[]> {
-        const response = await fetch(`${API_BASE_URL}/api/watsonx/agents`, {
+        const response = await fetch(`${API_BASE_URL}/watsonx/agents`, {
             headers: this.getAuthHeaders(),
         });
         return this.handleResponse<WatsonxAgent[]>(response);
@@ -63,7 +63,7 @@ class WatsonxApiService {
      * Check watsonx health and configuration status.
      */
     async checkHealth(): Promise<WatsonxHealthStatus> {
-        const response = await fetch(`${API_BASE_URL}/api/watsonx/health`, {
+        const response = await fetch(`${API_BASE_URL}/watsonx/health`, {
             headers: this.getAuthHeaders(),
         });
         return this.handleResponse<WatsonxHealthStatus>(response);
@@ -73,7 +73,7 @@ class WatsonxApiService {
      * Generic agent chat - send to any agent by ID.
      */
     async chat(request: WatsonxChatRequest): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/watsonx/chat`, {
+        const response = await fetch(`${API_BASE_URL}/watsonx/chat`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify(request),
@@ -90,7 +90,7 @@ class WatsonxApiService {
      * Detects bugs, code smells, security issues, and suggests improvements.
      */
     async analyzeCodebase(message: string, files?: FileContext[]): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/ai/codebase/analyze`, {
+        const response = await fetch(`${API_BASE_URL}/ai/codebase/analyze`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify({ agentId: 'codebase-analysis', message, files }),
@@ -103,7 +103,7 @@ class WatsonxApiService {
      * Generates code changes based on user instructions.
      */
     async modifyCode(instruction: string, files?: FileContext[]): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/ai/code/modify`, {
+        const response = await fetch(`${API_BASE_URL}/ai/code/modify`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify({ agentId: 'code-modifier', message: instruction, files }),
@@ -116,7 +116,7 @@ class WatsonxApiService {
      * Explains functions, classes, and architecture.
      */
     async askQuestion(question: string, files?: FileContext[]): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/ai/code/ask`, {
+        const response = await fetch(`${API_BASE_URL}/ai/code/ask`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify({ agentId: 'code-qa', message: question, files }),
@@ -129,7 +129,7 @@ class WatsonxApiService {
      * Checks for issues, suggests improvements.
      */
     async reviewCode(message: string, files?: FileContext[]): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/ai/code/review`, {
+        const response = await fetch(`${API_BASE_URL}/ai/code/review`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify({ agentId: 'code-review', message, files }),
@@ -142,7 +142,7 @@ class WatsonxApiService {
      * Creates READMEs, API docs, comments.
      */
     async generateDocumentation(message: string, files?: FileContext[]): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/ai/code/document`, {
+        const response = await fetch(`${API_BASE_URL}/ai/code/document`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify({ agentId: 'documentation', message, files }),
@@ -155,7 +155,7 @@ class WatsonxApiService {
      * Generates dependency graphs and detects circular dependencies.
      */
     async analyzeDependencies(message: string, files?: FileContext[]): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/ai/dependencies/analyze`, {
+        const response = await fetch(`${API_BASE_URL}/ai/dependencies/analyze`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify({ agentId: 'dependency-graph', message, files }),
@@ -168,7 +168,7 @@ class WatsonxApiService {
      * Helps with commits, pushes, PR descriptions.
      */
     async getGitHelp(message: string): Promise<WatsonxChatResponse> {
-        const response = await fetch(`${API_BASE_URL}/api/ai/git/assist`, {
+        const response = await fetch(`${API_BASE_URL}/ai/git/assist`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
             body: JSON.stringify({ agentId: 'git-assistant', message }),
