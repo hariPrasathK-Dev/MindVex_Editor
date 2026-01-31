@@ -1,7 +1,9 @@
 import type { RepositoryHistoryItem } from '~/lib/stores/repositoryHistory';
 import Cookies from 'js-cookie';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+// Use VITE_BACKEND_URL which should NOT include /api suffix
+// The endpoint path already includes /api
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL?.replace(/\/api\/?$/, '') || 'http://localhost:8080';
 
 interface RepositoryHistoryApiItem {
     id: number;
