@@ -1,8 +1,8 @@
 /**
  * AI Agent Panel Component
  * 
- * A simple UI panel to interact with MindVex AI agents powered by IBM watsonx Orchestrate.
- * Can be used standalone or integrated into the dashboard.
+ * A UI panel to interact with MindVex AI agents powered by IBM watsonx Orchestrate.
+ * Integrated into the Dashboard with workspace context.
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -28,6 +28,10 @@ interface AIAgentPanelProps {
     onResponse?: (response: WatsonxChatResponse) => void;
     /** Optional custom title */
     title?: string;
+    /** Whether panel is collapsed */
+    collapsed?: boolean;
+    /** Callback to toggle collapsed state */
+    onToggle?: () => void;
 }
 
 const AGENTS = [
@@ -40,7 +44,7 @@ const AGENTS = [
     { id: 'git-assistant', name: 'Git Assistant', icon: '🚀', description: 'Help with Git operations' },
 ];
 
-export function AIAgentPanel({ fileContext, onResponse, title }: AIAgentPanelProps) {
+export function AIAgentPanel({ fileContext, onResponse, title, collapsed = false, onToggle }: AIAgentPanelProps) {
     const [selectedAgent, setSelectedAgent] = useState(AGENTS[0]);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -139,30 +143,72 @@ export function AIAgentPanel({ fileContext, onResponse, title }: AIAgentPanelPro
         setError(null);
     };
 
+    if (collapsed) {
+        return (
+            <div
+                onClick={onToggle}
+                className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 border border-gray-700 hover:border-blue-500 cursor-pointer transition-all"
+            >
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">🤖</span>
+                        <div>
+                            <h3 className="font-semibold text-white">AI Agent Assistant</h3>
+                            <p className="text-sm text-gray-400">Click to expand and chat with your code</p>
+                        </div>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                {fileContext && fileContext.length > 0 && (
+                    <div className="mt-2 text-xs text-blue-400">
+                        📎 {fileContext.length} file(s) from current workspace available
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
-        <div className="flex flex-col h-full bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden">
+        <div className="flex flex-col bg-gray-800/50 backdrop-blur-lg rounded-xl border border-gray-700 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-bolt-elements-background-depth-2 border-b border-bolt-elements-borderColor">
-                <h3 className="text-lg font-semibold text-bolt-elements-textPrimary">
-                    {title || '🤖 AI Agent Panel'}
-                </h3>
-                <button
-                    onClick={clearChat}
-                    className="text-sm text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary transition-colors"
-                >
-                    Clear
-                </button>
+            <div className="flex items-center justify-between px-4 py-3 bg-gray-900/50 border-b border-gray-700">
+                <div className="flex items-center gap-3">
+                    <span className="text-xl">🤖</span>
+                    <h3 className="text-lg font-semibold text-white">
+                        {title || 'AI Agent Assistant'}
+                    </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={clearChat}
+                        className="text-sm text-gray-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-gray-700"
+                    >
+                        Clear
+                    </button>
+                    {onToggle && (
+                        <button
+                            onClick={onToggle}
+                            className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-700"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Agent Selector */}
-            <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-bolt-elements-borderColor bg-bolt-elements-background-depth-2">
+            <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-gray-700 bg-gray-900/30">
                 {AGENTS.map((agent) => (
                     <button
                         key={agent.id}
                         onClick={() => setSelectedAgent(agent)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${selectedAgent.id === agent.id
-                                ? 'bg-bolt-elements-button-primary-background text-bolt-elements-button-primary-text'
-                                : 'bg-bolt-elements-background-depth-3 text-bolt-elements-textSecondary hover:bg-bolt-elements-background-depth-4'
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                            : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
                             }`}
                         title={agent.description}
                     >
@@ -173,13 +219,18 @@ export function AIAgentPanel({ fileContext, onResponse, title }: AIAgentPanelPro
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-80 min-h-48">
                 {messages.length === 0 && (
-                    <div className="text-center text-bolt-elements-textSecondary py-8">
-                        <p className="text-2xl mb-2">{selectedAgent.icon}</p>
-                        <p className="font-medium">{selectedAgent.name}</p>
-                        <p className="text-sm mt-1">{selectedAgent.description}</p>
-                        <p className="text-xs mt-4 opacity-70">Type a message to get started</p>
+                    <div className="text-center text-gray-400 py-8">
+                        <p className="text-3xl mb-3">{selectedAgent.icon}</p>
+                        <p className="font-medium text-white">{selectedAgent.name}</p>
+                        <p className="text-sm mt-1 text-gray-400">{selectedAgent.description}</p>
+                        <p className="text-xs mt-4 text-gray-500">Type a message to get started</p>
+                        {fileContext && fileContext.length > 0 && (
+                            <p className="text-xs mt-2 text-blue-400">
+                                📎 {fileContext.length} file(s) from your workspace will be included
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -190,12 +241,12 @@ export function AIAgentPanel({ fileContext, onResponse, title }: AIAgentPanelPro
                     >
                         <div
                             className={`max-w-[80%] rounded-lg px-4 py-3 ${message.role === 'user'
-                                    ? 'bg-bolt-elements-button-primary-background text-bolt-elements-button-primary-text'
-                                    : 'bg-bolt-elements-background-depth-3 text-bolt-elements-textPrimary'
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                : 'bg-gray-700/70 text-white'
                                 }`}
                         >
                             {message.role === 'assistant' && message.agentName && (
-                                <div className="text-xs text-bolt-elements-textSecondary mb-1 font-medium">
+                                <div className="text-xs text-blue-400 mb-1 font-medium">
                                     {message.agentName}
                                 </div>
                             )}
@@ -203,17 +254,17 @@ export function AIAgentPanel({ fileContext, onResponse, title }: AIAgentPanelPro
 
                             {/* Tool Calls */}
                             {message.toolCalls && message.toolCalls.length > 0 && (
-                                <div className="mt-2 pt-2 border-t border-bolt-elements-borderColor">
-                                    <div className="text-xs text-bolt-elements-textSecondary mb-1">Tools used:</div>
+                                <div className="mt-2 pt-2 border-t border-gray-600">
+                                    <div className="text-xs text-gray-400 mb-1">Tools used:</div>
                                     {message.toolCalls.map((tc, idx) => (
-                                        <div key={idx} className="text-xs bg-bolt-elements-background-depth-4 rounded px-2 py-1 mt-1">
+                                        <div key={idx} className="text-xs bg-gray-800 rounded px-2 py-1 mt-1">
                                             🔧 {tc.toolName}
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            <div className="text-xs text-bolt-elements-textTertiary mt-2">
+                            <div className="text-xs text-gray-400 mt-2">
                                 {message.timestamp.toLocaleTimeString()}
                             </div>
                         </div>
@@ -222,9 +273,9 @@ export function AIAgentPanel({ fileContext, onResponse, title }: AIAgentPanelPro
 
                 {isLoading && (
                     <div className="flex justify-start">
-                        <div className="bg-bolt-elements-background-depth-3 rounded-lg px-4 py-3">
-                            <div className="flex items-center gap-2 text-bolt-elements-textSecondary">
-                                <div className="animate-spin w-4 h-4 border-2 border-bolt-elements-borderColor border-t-bolt-elements-button-primary-background rounded-full" />
+                        <div className="bg-gray-700/70 rounded-lg px-4 py-3">
+                            <div className="flex items-center gap-2 text-gray-300">
+                                <div className="animate-spin w-4 h-4 border-2 border-gray-500 border-t-blue-500 rounded-full" />
                                 <span className="text-sm">{selectedAgent.name} is thinking...</span>
                             </div>
                         </div>
@@ -241,29 +292,29 @@ export function AIAgentPanel({ fileContext, onResponse, title }: AIAgentPanelPro
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-bolt-elements-borderColor bg-bolt-elements-background-depth-2">
+            <div className="p-4 border-t border-gray-700 bg-gray-900/30">
                 <div className="flex gap-2">
                     <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={`Ask ${selectedAgent.name}...`}
-                        className="flex-1 bg-bolt-elements-background-depth-3 border border-bolt-elements-borderColor rounded-lg px-4 py-3 text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary resize-none focus:outline-none focus:ring-2 focus:ring-bolt-elements-button-primary-background"
+                        className="flex-1 bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         rows={2}
                         disabled={isLoading}
                     />
                     <button
                         onClick={sendMessage}
                         disabled={!input.trim() || isLoading}
-                        className="px-6 py-3 bg-bolt-elements-button-primary-background text-bolt-elements-button-primary-text rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-purple-700 transition-all"
                     >
                         {isLoading ? '...' : 'Send'}
                     </button>
                 </div>
 
                 {fileContext && fileContext.length > 0 && (
-                    <div className="mt-2 text-xs text-bolt-elements-textSecondary">
-                        📎 {fileContext.length} file(s) attached as context
+                    <div className="mt-2 text-xs text-blue-400">
+                        📎 {fileContext.length} file(s) from your workspace attached as context
                     </div>
                 )}
             </div>

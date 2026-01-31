@@ -524,12 +524,12 @@ export const Menu = () => {
                 <span className="text-xs text-mindvex-elements-textPrimary">Import File</span>
               </button>
               <a
-                href="/ai-agents"
+                href="/dashboard"
                 className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg p-3 transition-colors border border-blue-500/30"
-                title="AI Agents - watsonx Orchestrate"
+                title="AI Agents - Dashboard with watsonx Orchestrate"
               >
                 <span className="inline-block i-ph:robot h-5 w-5 mb-1 text-blue-400" />
-                <span className="text-xs text-mindvex-elements-textPrimary">AI Agents</span>
+                <span className="text-xs text-mindvex-elements-textPrimary">Dashboard</span>
               </a>
             </div>
             <div className="relative w-full">

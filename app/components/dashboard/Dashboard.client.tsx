@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from '@remix-run/react';
 import { BaseDashboard } from './BaseDashboard';
 import { webcontainer } from '~/lib/webcontainer';
@@ -7,6 +7,8 @@ import { path } from '~/utils/path';
 import { toast } from 'react-toastify';
 import { workbenchStore, quickActionsStore } from '~/lib/stores/workbench';
 import { WORK_DIR } from '~/utils/constants';
+import { AIAgentPanel } from '~/components/ai/AIAgentPanel';
+import type { FileContext } from '~/types/watsonx';
 
 interface LanguageDistribution {
   language: string;
@@ -36,6 +38,8 @@ interface DashboardState {
 }
 
 export function Dashboard() {
+  const [aiPanelCollapsed, setAiPanelCollapsed] = useState(true);
+  const [workspaceFiles, setWorkspaceFiles] = useState<{ path: string; content: string }[]>([]);
   const [dashboardState, setDashboardState] = useState<DashboardState>({
     loading: false,
     data: {
@@ -507,6 +511,13 @@ export function Dashboard() {
         totalCommentLines,
         totalBlankLines,
       });
+
+      // Store workspace files for AI agent context (limit to meaningful code files)
+      const codeFiles = analysisFiles.filter(f => {
+        const ext = path.extname(f.path).toLowerCase();
+        return ['.ts', '.tsx', '.js', '.jsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h', '.css', '.scss', '.html', '.json', '.md'].includes(ext);
+      }).slice(0, 20); // Limit to 20 files for context
+      setWorkspaceFiles(codeFiles);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -594,6 +605,15 @@ export function Dashboard() {
     return 'Needs Attention';
   };
 
+  // Convert workspace files to FileContext format for AI agents
+  const fileContext: FileContext[] = useMemo(() => {
+    return workspaceFiles.map(f => ({
+      path: f.path.replace(WORK_DIR, ''),
+      content: f.content.substring(0, 5000), // Limit content size
+      language: getLanguageFromExtension(path.extname(f.path).substring(1)) || 'text'
+    }));
+  }, [workspaceFiles]);
+
   return (
     <div className="h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 overflow-y-auto">
       {/* Header */}
@@ -640,6 +660,16 @@ export function Dashboard() {
               </>
             )}
           </button>
+        </div>
+
+        {/* AI Agent Panel - Integrated with Workspace Context */}
+        <div className="mb-8">
+          <AIAgentPanel
+            title="AI Agent Assistant"
+            fileContext={fileContext}
+            collapsed={aiPanelCollapsed}
+            onToggle={() => setAiPanelCollapsed(!aiPanelCollapsed)}
+          />
         </div>
 
         {/* Stats Overview */}
@@ -970,11 +1000,10 @@ export function Dashboard() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">Potential Issues</h2>
               <span
-                className={`px-3 py-1 rounded-full text-sm ${
-                  dashboardData.potentialIssues.length === 0
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-red-500/20 text-red-400'
-                }`}
+                className={`px-3 py-1 rounded-full text-sm ${dashboardData.potentialIssues.length === 0
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-red-500/20 text-red-400'
+                  }`}
               >
                 {dashboardData.potentialIssues.length} issues
               </span>
