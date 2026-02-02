@@ -61,22 +61,3 @@ export interface ApiError {
   message: string;
   timestamp: string;
 }
-
-// OTP Types
-export interface OtpResponse {
-  success: boolean;
-  message: string;
-  requiresOtp: boolean;
-  email: string; // Masked email
-}
-
-export interface OtpVerifyRequest {
-  email: string;
-  otp: string;
-  type: 'login' | 'registration';
-}
-
-export interface ResendOtpRequest {
-  email: string;
-  type: 'login' | 'registration';
-}

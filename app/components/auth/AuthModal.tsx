@@ -3,7 +3,6 @@ import { backendApi } from '~/lib/services/backendApiService';
 import { setAuth } from '~/lib/stores/authStore';
 import { toast } from 'react-toastify';
 import { GitHubButton } from './GitHubButton';
-import { OtpVerification } from './OtpVerification';
 
 /**
  * Generates a cryptographically strong password
@@ -61,12 +60,6 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
   const [suggestedPassword, setSuggestedPassword] = useState<string | null>(null);
   const [showSuggestion, setShowSuggestion] = useState(false);
 
-  // OTP verification state
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState('');
-  const [maskedEmail, setMaskedEmail] = useState('');
-  const [otpType, setOtpType] = useState<'login' | 'registration'>('login');
-
   // Generate a new strong password suggestion
   const handleGeneratePassword = useCallback(() => {
     const newPassword = generateStrongPassword(16);
@@ -96,25 +89,17 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
 
     try {
       if (isLogin) {
-        // Step 1: Initiate login - this sends OTP
-        const response = await backendApi.initiateLogin(email, password);
-        if (response.requiresOtp) {
-          setPendingEmail(email);
-          setMaskedEmail(response.email);
-          setOtpType('login');
-          setShowOtpModal(true);
-          toast.info('Verification code sent to your email');
-        }
+        // Direct login with email and password
+        const response = await backendApi.login(email, password);
+        setAuth(response.token, response.user);
+        toast.success('Login successful!');
+        onClose();
       } else {
-        // Step 1: Initiate registration - this sends OTP
-        const response = await backendApi.initiateRegister(email, password, fullName);
-        if (response.requiresOtp) {
-          setPendingEmail(email);
-          setMaskedEmail(response.email);
-          setOtpType('registration');
-          setShowOtpModal(true);
-          toast.info('Verification code sent to your email');
-        }
+        // Direct registration with email and password
+        const response = await backendApi.register(email, password, fullName);
+        setAuth(response.token, response.user);
+        toast.success('Account created successfully!');
+        onClose();
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Authentication failed');
@@ -122,33 +107,6 @@ export function AuthModal({ onClose, allowClose = true }: AuthModalProps) {
       setIsLoading(false);
     }
   };
-
-  // Handle successful OTP verification
-  const handleOtpVerified = (token: string, user: any) => {
-    setAuth(token, user);
-    setShowOtpModal(false);
-    onClose();
-  };
-
-  // Handle OTP cancellation
-  const handleOtpCancel = () => {
-    setShowOtpModal(false);
-    setPendingEmail('');
-    setMaskedEmail('');
-  };
-
-  // Show OTP verification modal
-  if (showOtpModal) {
-    return (
-      <OtpVerification
-        email={pendingEmail}
-        maskedEmail={maskedEmail}
-        type={otpType}
-        onVerified={handleOtpVerified}
-        onCancel={handleOtpCancel}
-      />
-    );
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
